@@ -140,3 +140,5 @@ C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.API\obj\Debug\net8.0\refint\IDV.API.
 C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.API\obj\Debug\net8.0\IDV.API.pdb
 C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.API\obj\Debug\net8.0\IDV.API.genruntimeconfig.cache
 C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.API\obj\Debug\net8.0\ref\IDV.API.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.API\bin\Debug\net8.0\appsettings.Production.json
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.API\obj\Debug\net8.0\IDV.API.sourcelink.json

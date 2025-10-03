@@ -17,8 +17,15 @@ var builder = WebApplication.CreateBuilder(args);
 // Configure Npgsql to handle DateTime as UTC
 AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
 
+// Get connection string and validate
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Database connection string 'DefaultConnection' is not configured. Please set the ConnectionStrings__DefaultConnection environment variable.");
+}
+
 builder.Services.AddDbContext<IDVDbContext>(options =>
-    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(connectionString));
 
 // Add AutoMapper
 builder.Services.AddAutoMapper(typeof(MappingProfile));
@@ -102,11 +109,24 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Seed database
-using (var scope = app.Services.CreateScope())
+// Seed database with error handling
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<IDVDbContext>();
-    await DatabaseSeeder.SeedAsync(context);
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<IDVDbContext>();
+        await DatabaseSeeder.SeedAsync(context);
+    }
+}
+catch (Exception ex)
+{
+    var logger = app.Services.GetRequiredService<ILogger<Program>>();
+    logger.LogError(ex, "An error occurred while seeding the database.");
+    // Continue running the app even if seeding fails in production
+    if (app.Environment.IsDevelopment())
+    {
+        throw;
+    }
 }
 
 // Configure the HTTP request pipeline.

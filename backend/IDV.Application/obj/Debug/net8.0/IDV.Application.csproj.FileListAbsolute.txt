@@ -13,3 +13,4 @@ C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Application\obj\Debug\net8.0\IDV.App
 C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Application\obj\Debug\net8.0\refint\IDV.Application.dll
 C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Application\obj\Debug\net8.0\IDV.Application.pdb
 C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Application\obj\Debug\net8.0\ref\IDV.Application.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Application\obj\Debug\net8.0\IDV.Application.sourcelink.json

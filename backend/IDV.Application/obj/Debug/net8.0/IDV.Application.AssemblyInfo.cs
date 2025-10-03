@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("IDV.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3bd27e70ed24f44cf7e91cf29253e7fc2034a31e")]
 [assembly: System.Reflection.AssemblyProductAttribute("IDV.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("IDV.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
