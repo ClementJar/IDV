@@ -1,0 +1,47 @@
+services:
+  # Backend API Service
+  - type: web
+    name: idv-api
+    env: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: ASPNETCORE_URLS
+        value: http://+:10000
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: idv-postgres
+          property: connectionString
+      - key: JwtSettings__SecretKey
+        generateValue: true
+      - key: JwtSettings__Issuer
+        value: IDVSystem
+      - key: JwtSettings__Audience
+        value: IDVClients
+      - key: JwtSettings__ExpiryInHours
+        value: 24
+    healthCheckPath: /health
+    
+  # Frontend Service
+  - type: web
+    name: idv-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    dockerContext: ./frontend
+    envVars:
+      - key: REACT_APP_API_URL
+        fromService:
+          type: web
+          name: idv-api
+          envVarKey: RENDER_EXTERNAL_URL
+      - key: NODE_ENV
+        value: production
+
+  # PostgreSQL Database
+databases:
+  - name: idv-postgres
+    databaseName: idv_database
+    user: idv_user
+    plan: free

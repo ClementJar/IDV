@@ -1,0 +1,15 @@
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\bin\Debug\net8.0\IDV.Infrastructure.deps.json
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\bin\Debug\net8.0\IDV.Infrastructure.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\bin\Debug\net8.0\IDV.Infrastructure.pdb
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\bin\Debug\net8.0\IDV.Core.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\bin\Debug\net8.0\IDV.Core.pdb
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infrastructure.AssemblyInfo.cs
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infr.6DFECF09.Up2Date
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infrastructure.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\refint\IDV.Infrastructure.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\IDV.Infrastructure.pdb
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Infrastructure\obj\Debug\net8.0\ref\IDV.Infrastructure.dll

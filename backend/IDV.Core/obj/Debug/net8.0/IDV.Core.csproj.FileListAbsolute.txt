@@ -1,0 +1,11 @@
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\bin\Debug\net8.0\IDV.Core.deps.json
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\bin\Debug\net8.0\IDV.Core.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\bin\Debug\net8.0\IDV.Core.pdb
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\IDV.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\IDV.Core.AssemblyInfoInputs.cache
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\IDV.Core.AssemblyInfo.cs
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\IDV.Core.csproj.CoreCompileInputs.cache
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\IDV.Core.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\refint\IDV.Core.dll
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\IDV.Core.pdb
+C:\Users\CLEME\IdeaProjects\IDV\backend\IDV.Core\obj\Debug\net8.0\ref\IDV.Core.dll

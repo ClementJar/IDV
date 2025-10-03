@@ -1,0 +1,6 @@
+@IDV.API_HostAddress = http://localhost:5161
+
+GET {{IDV.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
