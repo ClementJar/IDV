@@ -20,12 +20,33 @@ public class AuthController : ControllerBase
     {
         try
         {
+            if (request == null)
+            {
+                return BadRequest(new { message = "Login request cannot be null" });
+            }
+
+            if (string.IsNullOrEmpty(request.Username) || string.IsNullOrEmpty(request.Password))
+            {
+                return BadRequest(new { message = "Username and password are required" });
+            }
+
             var result = await _authService.LoginAsync(request);
             return Ok(result);
         }
         catch (UnauthorizedAccessException ex)
         {
             return Unauthorized(new { message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            // Log the full exception for debugging
+            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<AuthController>>();
+            logger.LogError(ex, "Login error for username: {Username}", request?.Username);
+            
+            return StatusCode(500, new { 
+                message = "An internal server error occurred during login",
+                error = ex.Message 
+            });
         }
     }
 

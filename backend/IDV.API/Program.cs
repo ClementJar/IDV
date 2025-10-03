@@ -137,20 +137,36 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
-// Seed database with error handling
+// Add detailed logging
+var logger = app.Services.GetRequiredService<ILogger<Program>>();
+logger.LogInformation("Starting IDV API application...");
+logger.LogInformation("Environment: {Environment}", app.Environment.EnvironmentName);
+
+// Test database connection
 try
 {
     using (var scope = app.Services.CreateScope())
     {
         var context = scope.ServiceProvider.GetRequiredService<IDVDbContext>();
+        logger.LogInformation("Testing database connection...");
+        
+        // Test if we can connect to the database
+        await context.Database.CanConnectAsync();
+        logger.LogInformation("Database connection successful!");
+        
+        // Seed database
+        logger.LogInformation("Starting database seeding...");
         await DatabaseSeeder.SeedAsync(context);
+        logger.LogInformation("Database seeding completed successfully!");
     }
 }
 catch (Exception ex)
 {
-    var logger = app.Services.GetRequiredService<ILogger<Program>>();
-    logger.LogError(ex, "An error occurred while seeding the database.");
-    // Continue running the app even if seeding fails in production
+    logger.LogError(ex, "Database error occurred: {Message}", ex.Message);
+    logger.LogError("Connection string: {ConnectionString}", 
+        builder.Configuration.GetConnectionString("DefaultConnection")?.Substring(0, 50) + "...");
+    
+    // Continue running the app even if database fails in production
     if (app.Environment.IsDevelopment())
     {
         throw;
