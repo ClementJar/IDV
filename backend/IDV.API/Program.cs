@@ -71,10 +71,38 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins(builder.Configuration.GetSection("AllowedOrigins").Get<string[]>()!)
-              .AllowAnyMethod()
-              .AllowAnyHeader()
-              .AllowCredentials();
+        // Get allowed origins from configuration (supports both array and individual env vars)
+        var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>() ?? new string[0];
+        
+        // Also check for individual environment variables (AllowedOrigins__0, AllowedOrigins__1, etc.)
+        var envOrigins = new List<string>();
+        for (int i = 0; i < 10; i++) // Check up to 10 origins
+        {
+            var origin = builder.Configuration[$"AllowedOrigins__{i}"];
+            if (!string.IsNullOrEmpty(origin))
+                envOrigins.Add(origin);
+        }
+        
+        // Always include the production frontend URL
+        var productionOrigins = new[] { "https://idv-front.onrender.com" };
+        
+        // Combine all sources
+        var allOrigins = allowedOrigins.Concat(envOrigins).Concat(productionOrigins).Distinct().ToArray();
+        
+        if (allOrigins.Length > 0)
+        {
+            policy.WithOrigins(allOrigins)
+                  .AllowAnyMethod()
+                  .AllowAnyHeader()
+                  .AllowCredentials();
+        }
+        else
+        {
+            // Fallback for development
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
     });
 });
 
