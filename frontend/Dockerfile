@@ -4,13 +4,13 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 # Copy package files
-COPY frontend/idv-demo-ui/package*.json ./
+COPY idv-demo-ui/package*.json ./
 
 # Install dependencies
 RUN npm install
 
 # Copy source code
-COPY frontend/idv-demo-ui/ ./
+COPY idv-demo-ui/ ./
 
 # Build the app for production
 RUN npm run build
@@ -22,7 +22,7 @@ FROM nginx:alpine
 COPY --from=build /app/build /usr/share/nginx/html
 
 # Copy nginx configuration
-COPY frontend/nginx.conf /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Create nginx user and set permissions
 RUN chown -R nginx:nginx /usr/share/nginx/html && \

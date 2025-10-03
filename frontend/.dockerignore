@@ -1,0 +1,12 @@
+# Don't ignore package files and source code
+!idv-demo-ui/package*.json
+!idv-demo-ui/src
+!idv-demo-ui/public
+!idv-demo-ui/tsconfig.json
+!idv-demo-ui/tailwind.config.js
+!idv-demo-ui/postcss.config.js
+
+# Ignore build artifacts and dependencies
+idv-demo-ui/node_modules
+idv-demo-ui/build
+idv-demo-ui/.env.local
