@@ -29,7 +29,7 @@ services:
     name: idv-frontend
     env: docker
     dockerfilePath: ./frontend/Dockerfile
-    dockerContext: ./
+    dockerContext: ./frontend
     envVars:
       - key: REACT_APP_API_URL
         fromService:
