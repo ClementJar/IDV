@@ -4,7 +4,8 @@ FROM node:18-alpine AS build
 WORKDIR /app
 
 # Copy package files
-COPY idv-demo-ui/package*.json ./
+COPY idv-demo-ui/package.json ./
+COPY idv-demo-ui/package-lock.json ./
 
 # Install dependencies
 RUN npm ci
