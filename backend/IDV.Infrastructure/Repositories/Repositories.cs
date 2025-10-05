@@ -73,11 +73,34 @@ public class RegisteredClientRepository : Repository<RegisteredClient>, IRegiste
     {
     }
 
+    public override async Task<IEnumerable<RegisteredClient>> GetAllAsync()
+    {
+        return await _dbSet
+            .Include(c => c.RegisteredBy)
+            .Include(c => c.ClientProducts)
+                .ThenInclude(cp => cp.Product)
+            .Include(c => c.IDSourceClient)
+            .ToListAsync();
+    }
+
+    public override async Task<RegisteredClient?> GetByIdAsync(Guid id)
+    {
+        return await _dbSet
+            .Include(c => c.RegisteredBy)
+            .Include(c => c.ClientProducts)
+                .ThenInclude(cp => cp.Product)
+            .Include(c => c.IDSourceClient)
+            .FirstOrDefaultAsync(c => c.RegistrationId == id);
+    }
+
     public async Task<IEnumerable<RegisteredClient>> SearchClientsAsync(string searchTerm)
     {
         var lowerSearchTerm = searchTerm.ToLower();
         return await _dbSet
             .Include(c => c.RegisteredBy)
+            .Include(c => c.ClientProducts)
+                .ThenInclude(cp => cp.Product)
+            .Include(c => c.IDSourceClient)
             .Where(c => c.FullName.ToLower().Contains(lowerSearchTerm) ||
                        c.IDNumber.Contains(lowerSearchTerm) ||
                        c.Email.ToLower().Contains(lowerSearchTerm))
@@ -88,6 +111,9 @@ public class RegisteredClientRepository : Repository<RegisteredClient>, IRegiste
     {
         return await _dbSet
             .Include(c => c.RegisteredBy)
+            .Include(c => c.ClientProducts)
+                .ThenInclude(cp => cp.Product)
+            .Include(c => c.IDSourceClient)
             .Where(c => c.RegisteredByUserId == userId)
             .ToListAsync();
     }
