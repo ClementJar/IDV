@@ -21,40 +21,24 @@ public static class DatabaseSeeder
         {
             await SeedUsers(context);
         }
+        
+        if (!await context.Products.AnyAsync())
+        {
+            await SeedProducts(context);
+        }
+
+        if (!await context.IDSourceClients.AnyAsync())
+        {
+            await SeedIDSourceClients(context);
+        }
 
         // Clear and reseed Products properly (handle foreign key constraints)
-        await ClearAndSeedProducts(context);
 
         // Always reseed IDSourceClients with correct formats
         
     }
 
-    private static async Task ClearAndSeedProducts(IDVDbContext context)
-    {
-        // First, delete all ClientProducts (which reference Products)
-        if (await context.ClientProducts.AnyAsync())
-        {
-            context.ClientProducts.RemoveRange(await context.ClientProducts.ToListAsync());
-            await context.SaveChangesAsync();
-        }
-
-        // Then delete all RegisteredClients (which might reference IDSourceClients)
-        if (await context.RegisteredClients.AnyAsync())
-        {
-            context.RegisteredClients.RemoveRange(await context.RegisteredClients.ToListAsync());
-            await context.SaveChangesAsync();
-        }
-
-        // Now we can safely delete Products
-        if (await context.Products.AnyAsync())
-        {
-            context.Products.RemoveRange(await context.Products.ToListAsync());
-            await context.SaveChangesAsync();
-        }
-
-        // Finally, seed the new products
-        await SeedProducts(context);
-    }
+   
 
     private static async Task SeedUsers(IDVDbContext context)
     {

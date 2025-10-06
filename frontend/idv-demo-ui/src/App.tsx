@@ -1883,38 +1883,38 @@ const MIReportsPage = () => {
       console.log('MI Reports API response:', apiResponse);
       
       // Transform backend response to match frontend expectations
-      if (apiResponse && typeof apiResponse.TotalClients !== 'undefined') {
+      if (apiResponse && typeof apiResponse.totalClients !== 'undefined') {
         const transformedData = {
           summary: {
-            totalClients: apiResponse.TotalClients || 0,
-            newRegistrations: apiResponse.TodayRegistrations || 0,
-            activeProducts: apiResponse.ActiveProducts || 0,
-            totalPremium: apiResponse.ProvinceStats ? 
-              apiResponse.ProvinceStats.reduce((sum: number, p: any) => sum + (p.TotalPremium || 0), 0) : 0,
-            verificationRequests: apiResponse.TotalVerifications || 0,
-            successfulVerifications: Math.round((apiResponse.TotalVerifications || 0) * ((apiResponse.SuccessRate || 0) / 100))
+            totalClients: apiResponse.totalClients || 0,
+            newRegistrations: apiResponse.todayRegistrations || 0,
+            activeProducts: apiResponse.activeProducts || 0,
+            totalPremium: apiResponse.provinceStats ? 
+              apiResponse.provinceStats.reduce((sum: number, p: any) => sum + (p.totalPremium || 0), 0) : 0,
+            verificationRequests: apiResponse.totalVerifications || 0,
+            successfulVerifications: Math.round((apiResponse.totalVerifications || 0) * ((apiResponse.successRate || 0) / 100))
           },
-          clientsByProvince: (apiResponse.ProvinceStats || []).map((stat: any) => ({
-            province: stat.Province || 'Unknown',
-            count: stat.ClientCount || 0,
-            percentage: apiResponse.TotalClients > 0 ? 
-              Math.round((stat.ClientCount / apiResponse.TotalClients) * 100 * 10) / 10 : 0
+          clientsByProvince: (apiResponse.provinceStats || []).map((stat: any) => ({
+            province: stat.province || 'Unknown',
+            count: stat.clientCount || 0,
+            percentage: apiResponse.totalClients > 0 ? 
+              Math.round((stat.clientCount / apiResponse.totalClients) * 100 * 10) / 10 : 0
           })),
-          productPerformance: (apiResponse.CategoryStats || []).map((stat: any) => ({
-            name: stat.Category || 'Unknown',
-            sales: stat.EnrollmentCount || 0,
-            premium: stat.TotalPremium || 0,
+          productPerformance: (apiResponse.categoryStats || []).map((stat: any) => ({
+            name: stat.category || 'Unknown',
+            sales: stat.enrollmentCount || 0,
+            premium: stat.totalPremium || 0,
             growth: Math.random() * 20 + 5 // TODO: Calculate actual growth from trends
           })),
           verificationStats: {
-            totalRequests: apiResponse.TotalVerifications || 0,
-            successful: Math.round((apiResponse.TotalVerifications || 0) * ((apiResponse.SuccessRate || 0) / 100)),
-            failed: Math.round((apiResponse.TotalVerifications || 0) * (1 - ((apiResponse.SuccessRate || 0) / 100))),
-            avgResponseTime: Math.round((apiResponse.AverageResponseTime || 0) * 1000), // Convert back to ms
-            topSources: (apiResponse.TopVerificationSources || []).map((source: any) => ({
-              source: source.Source || 'Unknown',
-              requests: source.Count || 0,
-              successRate: source.Percentage || 0
+            totalRequests: apiResponse.totalVerifications || 0,
+            successful: Math.round((apiResponse.totalVerifications || 0) * ((apiResponse.successRate || 0) / 100)),
+            failed: Math.round((apiResponse.totalVerifications || 0) * (1 - ((apiResponse.successRate || 0) / 100))),
+            avgResponseTime: Math.round((apiResponse.averageResponseTime || 0) * 1000), // Convert back to ms
+            topSources: (apiResponse.topVerificationSources || []).map((source: any) => ({
+              source: source.source || 'Unknown',
+              requests: source.count || 0,
+              successRate: source.percentage || 0
             }))
           }
         };
