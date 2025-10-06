@@ -332,11 +332,13 @@ public class ClientRegistrationService : IClientRegistrationService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly IAuditService _auditService;
 
-    public ClientRegistrationService(IUnitOfWork unitOfWork, IMapper mapper)
+    public ClientRegistrationService(IUnitOfWork unitOfWork, IMapper mapper, IAuditService auditService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _auditService = auditService;
     }
 
     public async Task<ClientRegistrationWithEposDto> RegisterNewClientAsync(RegisterClientRequestDto request, Guid registeredByUserId)
@@ -359,6 +361,15 @@ public class ClientRegistrationService : IClientRegistrationService
 
         await _unitOfWork.RegisteredClients.AddAsync(client);
         await _unitOfWork.SaveChangesAsync();
+
+        // Log the client registration action
+        await _auditService.LogActionAsync(
+            registeredByUserId, 
+            "Client Registration", 
+            "Client", 
+            client.RegistrationId, 
+            $"New client registered: {client.FullName} (ID: {client.IDNumber})"
+        );
 
         // Attach products if provided
         if (request.ProductIds.Any())
@@ -533,5 +544,48 @@ public class ClientRegistrationService : IClientRegistrationService
         
         // Default to national_id
         return "national_id";
+    }
+}
+
+public class AuditService : IAuditService
+{
+    private readonly IUnitOfWork _unitOfWork;
+
+    public AuditService(IUnitOfWork unitOfWork)
+    {
+        _unitOfWork = unitOfWork;
+    }
+
+    public async Task LogActionAsync(Guid userId, string action, string entityType, Guid? entityId = null, string? details = null, string? ipAddress = null)
+    {
+        var auditLog = new AuditLog
+        {
+            AuditId = Guid.NewGuid(),
+            UserId = userId,
+            Action = action,
+            EntityType = entityType,
+            EntityId = entityId,
+            Details = details,
+            IPAddress = ipAddress,
+            Timestamp = DateTime.UtcNow
+        };
+
+        await _unitOfWork.AuditLogs.AddAsync(auditLog);
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<IEnumerable<AuditLog>> GetAuditTrailAsync(DateTime? startDate = null, DateTime? endDate = null, Guid? userId = null)
+    {
+        if (startDate.HasValue && endDate.HasValue)
+        {
+            return await _unitOfWork.AuditLogs.GetByDateRangeAsync(startDate.Value, endDate.Value);
+        }
+        
+        if (userId.HasValue)
+        {
+            return await _unitOfWork.AuditLogs.GetByUserAsync(userId.Value);
+        }
+
+        return await _unitOfWork.AuditLogs.GetAllAsync();
     }
 }

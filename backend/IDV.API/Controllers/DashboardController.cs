@@ -52,7 +52,7 @@ namespace IDV.API.Controllers
                         Id = a.AuditId.ToString(),
                         Action = a.Action,
                         Description = a.Details ?? a.EntityType,
-                        Timestamp = a.Timestamp.ToString("O"),
+                        Timestamp = a.Timestamp.ToUniversalTime().ToString("O"),
                         UserId = a.UserId.ToString(),
                         UserName = a.User.FullName
                     })
