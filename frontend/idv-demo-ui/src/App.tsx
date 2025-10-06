@@ -463,18 +463,13 @@ const RegistrationPage = () => {
   };
 
   // Helper function to simulate checking individual sources
-  const checkSourceForMatch = async (sourceName: string, idNumber: string): Promise<boolean> => {
-    // Call the real API to check if this specific source has data
-    try {
-      const result = await verificationAPI.searchClientMultiSource(idNumber);
-      if (result.success && result.sourceResults) {
-        const sourceResult = result.sourceResults.find(sr => sr.sourceName === sourceName);
-        return sourceResult?.isFound || false;
-      }
-      return false;
-    } catch (error) {
-      return false;
+  const checkSourceForMatch = (sourceName: string, apiResult: any): boolean => {
+    // Check if this specific source has data from the API result
+    if (apiResult && apiResult.success && apiResult.sourceResults) {
+      const sourceResult = apiResult.sourceResults.find((sr: any) => sr.sourceName === sourceName);
+      return sourceResult?.isFound || false;
     }
+    return false;
   };
 
   const handleSearch = async () => {
@@ -488,13 +483,13 @@ const RegistrationPage = () => {
     setVerificationSources([]);
     setCurrentSearchingSource('Establishing secure connections...');
     
-    // Define the sources to check sequentially with realistic timing
+    // Define the sources to check sequentially with ultra-fast timing
     const sourcesToCheck = [
-      { name: 'INRIS', displayName: 'ID Registration Information System', delay: 1200 },
-      { name: 'ZRA', displayName: 'Zambia Revenue Authority', delay: 900 },
-      { name: 'MNO_AIRTEL', displayName: 'Airtel Network Database', delay: 700 },
-      { name: 'MNO_MTN', displayName: 'MTN Network Database', delay: 650 },
-      { name: 'ZAMTEL', displayName: 'Zamtel Network Database', delay: 1100 },
+      { name: 'INRIS', displayName: 'ID Registration Information System', delay: 400 },
+      { name: 'ZRA', displayName: 'Zambia Revenue Authority', delay: 350 },
+      { name: 'MNO_AIRTEL', displayName: 'Airtel Network Database', delay: 300 },
+      { name: 'MNO_MTN', displayName: 'MTN Network Database', delay: 250 },
+      { name: 'ZAMTEL', displayName: 'Zamtel Network Database', delay: 450 },
     ];
 
     try {
@@ -503,6 +498,10 @@ const RegistrationPage = () => {
       
       // Initialize sources array for real-time updates
       let currentSources: any[] = [];
+      
+      // Call the real API first to get the actual results
+      setCurrentSearchingSource('📊 Connecting to verification systems...');
+      const result = await verificationAPI.searchClientMultiSource(idNumber);
       
       // Show all sources initially
       const allSources = sourcesToCheck.map(source => ({
@@ -533,9 +532,8 @@ const RegistrationPage = () => {
         // Realistic delay for each source
         await new Promise(resolve => setTimeout(resolve, source.delay));
         
-        // Simulate checking this source - in a real app, you'd check each source individually
-        // For demo purposes, we'll make some sources have matches based on ID patterns
-        const hasMatch = await checkSourceForMatch(source.name, idNumber);
+        // Check if this source has a match from the API result
+        const hasMatch = checkSourceForMatch(source.name, result);
         
         if (hasMatch) {
           // Found a match! Update this source as found and stop searching
@@ -549,7 +547,7 @@ const RegistrationPage = () => {
           
           // Show success message
           setCurrentSearchingSource(`✅ Match Found in ${source.displayName}!`);
-          await new Promise(resolve => setTimeout(resolve, 1500));
+          await new Promise(resolve => setTimeout(resolve, 400));
           break;
         } else {
           // No match in this source, mark as not found
@@ -560,15 +558,8 @@ const RegistrationPage = () => {
           }]);
           
           // Small delay before checking next source
-          await new Promise(resolve => setTimeout(resolve, 400));
+          await new Promise(resolve => setTimeout(resolve, 100));
         }
-      }
-      
-      // Now call the real API to get actual client data if we found a match
-      let result = null;
-      if (foundMatch) {
-        setCurrentSearchingSource('📊 Retrieving client details...');
-        result = await verificationAPI.searchClientMultiSource(idNumber);
       }
       
       if (foundMatch && result && result.success && result.finalResult) {
