@@ -154,19 +154,20 @@ public class IDVerificationService : IIDVerificationService
     {
         var startTime = DateTime.UtcNow;
         
-        var dataSources = new List<(string Source, string DisplayName, int Priority)>
+        // Realistic data sources with varied response times
+        var dataSources = new List<(string Source, string DisplayName, int Priority, int MinDelay, int MaxDelay)>
         {
-            ("INRIS", "ID Registration Information System", 1),
-            ("ZRA", "Zambia Revenue Authority", 2),
-            ("MNO_AIRTEL", "Airtel Network Database", 3),
-            ("MNO_MTN", "MTN Network Database", 4),
-            ("MNO_ZAMTEL", "Zamtel Network Database", 5),
-            ("BANK_ZANACO", "Zanaco Banking Records", 6),
-            ("BANK_FNB", "FNB Banking Records", 7),
-            ("BANK_STANCHART", "Standard Chartered Records", 8),
-            ("GOVT_PAYROLL", "Government Payroll System", 9),
-            ("NAPSA", "National Pension Scheme Authority", 10),
-            ("RTSA", "Road Transport & Safety Agency", 11)
+            ("INRIS", "ID Registration Information System", 1, 200, 500),
+            ("ZRA", "Zambia Revenue Authority", 2, 300, 800),
+            ("MNO_AIRTEL", "Airtel Network Database", 3, 150, 400),
+            ("MNO_MTN", "MTN Network Database", 4, 180, 450),
+            ("MNO_ZAMTEL", "Zamtel Network Database", 5, 200, 500),
+            ("BANK_ZANACO", "Zanaco Banking Records", 6, 400, 900),
+            ("BANK_FNB", "FNB Banking Records", 7, 350, 750),
+            ("BANK_STANCHART", "Standard Chartered Records", 8, 450, 1000),
+            ("GOVT_PAYROLL", "Government Payroll System", 9, 600, 1200),
+            ("NAPSA", "National Pension Scheme Authority", 10, 500, 1000),
+            ("RTSA", "Road Transport & Safety Agency", 11, 400, 800)
         };
 
         var response = new MultiSourceVerificationResponseDto
@@ -180,8 +181,8 @@ public class IDVerificationService : IIDVerificationService
         ClientSearchResultDto? foundResult = null;
         var totalResponseTime = 0;
 
-        // Search through sources in priority order
-        foreach (var (source, displayName, priority) in dataSources.OrderBy(x => x.Priority))
+        // Search through sources in priority order with real-time stopping
+        foreach (var (source, displayName, priority, minDelay, maxDelay) in dataSources.OrderBy(x => x.Priority))
         {
             var sourceStart = DateTime.UtcNow;
             
@@ -197,6 +198,9 @@ public class IDVerificationService : IIDVerificationService
 
             try
             {
+                // Simulate realistic network delay based on source type
+                await Task.Delay(_random.Next(minDelay, maxDelay));
+                
                 // Search in this specific source - optimized database query
                 var clientResult = await _unitOfWork.IDSourceClients.GetByIDAndSourceAsync(idNumber, source);
                 
@@ -215,13 +219,16 @@ public class IDVerificationService : IIDVerificationService
                     // Log successful verification
                     await LogVerificationAttemptAsync(userId, idNumber, "Found", 1, responseTime, source);
                     
-                    // Found in this source, we can stop searching
+                    // REAL-TIME: Found in this source, stop searching immediately
                     break;
                 }
                 else
                 {
                     sourceResult.Status = "NotFound";
                     sourceResult.IsFound = false;
+                    
+                    // Log unsuccessful attempt
+                    await LogVerificationAttemptAsync(userId, idNumber, "NotFound", 0, responseTime, source);
                 }
             }
             catch (Exception ex)
@@ -230,15 +237,19 @@ public class IDVerificationService : IIDVerificationService
                 sourceResult.ErrorMessage = ex.Message;
                 sourceResult.ResponseTime = (int)(DateTime.UtcNow - sourceStart).TotalMilliseconds;
                 totalResponseTime += sourceResult.ResponseTime;
+                
+                // Log error attempt
+                await LogVerificationAttemptAsync(userId, idNumber, "Error", 0, sourceResult.ResponseTime, source);
             }
         }
 
-        // Mark remaining sources as not checked if we found a result
+        // Mark remaining sources as skipped if we found a result (real-time stop)
         if (foundResult != null)
         {
             foreach (var remaining in response.SourceResults.Where(s => s.Status == "Checking"))
             {
                 remaining.Status = "Skipped";
+                remaining.ResponseTime = 0;
             }
         }
 
@@ -328,15 +339,16 @@ public class ClientRegistrationService : IClientRegistrationService
         _mapper = mapper;
     }
 
-    public async Task<RegisterClientResponseDto> RegisterNewClientAsync(RegisterClientRequestDto request, Guid registeredByUserId)
+    public async Task<ClientRegistrationWithEposDto> RegisterNewClientAsync(RegisterClientRequestDto request, Guid registeredByUserId)
     {
         var existingClient = await _unitOfWork.RegisteredClients.GetSingleAsync(c => c.IDNumber == request.IDNumber);
         if (existingClient != null)
         {
-            return new RegisterClientResponseDto
+            return new ClientRegistrationWithEposDto
             {
                 Success = false,
-                Message = "Client with this ID number is already registered"
+                Message = "Client with this ID number is already registered",
+                EposPayload = new EposPayloadDto()
             };
         }
 
@@ -373,12 +385,16 @@ public class ClientRegistrationService : IClientRegistrationService
 
         var clientDetails = await GetClientDetailsAsync(client.RegistrationId);
         
-        return new RegisterClientResponseDto
+        // Generate EPOS payload
+        var eposPayload = await GenerateEposPayloadAsync(client, clientDetails);
+        
+        return new ClientRegistrationWithEposDto
         {
             Success = true,
             Message = "Client registered successfully",
             RegistrationId = client.RegistrationId,
-            Client = clientDetails
+            Client = clientDetails,
+            EposPayload = eposPayload
         };
     }
 
@@ -434,5 +450,88 @@ public class ClientRegistrationService : IClientRegistrationService
     private string GeneratePolicyNumber()
     {
         return $"POL{DateTime.UtcNow:yyyyMMdd}{new Random().Next(1000, 9999)}";
+    }
+
+    private async Task<EposPayloadDto> GenerateEposPayloadAsync(RegisteredClient client, ClientDetailsDto? clientDetails)
+    {
+        // Determine ID type based on ID number format
+        var idType = DetermineIdType(client.IDNumber);
+        
+        // Get source from ID verification (where the client was actually found)
+        var idSourceClient = await _unitOfWork.IDSourceClients.GetSingleAsync(c => c.IDNumber == client.IDNumber);
+        var sourceWhereFound = idSourceClient?.Source ?? "id_system";
+        
+        // Map source names to match EPOS requirements
+        var eposSourceName = MapSourceToEposFormat(sourceWhereFound);
+        
+        var eposPayload = new EposPayloadDto
+        {
+            IdType = idType,
+            IdNumber = client.IDNumber,
+            FullName = client.FullName,
+            DateOfBirth = client.DateOfBirth.ToString("yyyy-MM-dd"),
+            Gender = client.Gender.ToLower(),
+            MobileNumber = client.MobileNumber,
+            Address = new EposAddressDto
+            {
+                Province = client.Province,
+                District = client.District,
+                PostalCode = client.PostalCode
+            },
+            Source = eposSourceName, // Source where client was found
+            CapturedBy = "EPOS-DB", // Always EPOS-DB as requested
+            CaptureTimestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ"),
+            Products = clientDetails?.Products?.Select(p => new EposProductDto
+            {
+                ProductId = p.ProductId.ToString(),
+                ProductName = p.Product.ProductName,
+                ProductCode = p.Product.ProductCode,
+                PremiumAmount = p.PremiumAmount,
+                PolicyNumber = p.PolicyNumber,
+                Status = p.Status
+            }).ToList()
+        };
+
+        return eposPayload;
+    }
+
+    private static string MapSourceToEposFormat(string source)
+    {
+        return source switch
+        {
+            "MNO_AIRTEL" => "airtel_network",
+            "MNO_MTN" => "mtn_network", 
+            "MNO_ZAMTEL" => "zamtel_network",
+            "BANK_ZANACO" => "zanaco_banking",
+            "BANK_FNB" => "fnb_banking",
+            "BANK_STANCHART" => "stanchart_banking",
+            "INRIS" => "national_registry",
+            "ZRA" => "revenue_authority",
+            "GOVT_PAYROLL" => "government_payroll",
+            "NAPSA" => "pension_authority",
+            "RTSA" => "transport_authority",
+            _ => "id_system"
+        };
+    }
+
+    private static string DetermineIdType(string idNumber)
+    {
+        // Remove any spaces or special characters
+        var cleanId = idNumber.Replace(" ", "").Replace("/", "").Replace("-", "");
+        
+        // National ID: typically 12 digits or format like 150685/10/1
+        if (idNumber.Contains("/") && idNumber.Length >= 10)
+            return "national_id";
+        
+        // Passport: typically starts with letters
+        if (idNumber.Any(char.IsLetter) && idNumber.Length >= 6 && idNumber.Length <= 12)
+            return "passport";
+        
+        // Driving License: typically alphanumeric
+        if (idNumber.Any(char.IsLetter) && idNumber.Any(char.IsDigit) && idNumber.Length >= 8)
+            return "driving_license";
+        
+        // Default to national_id
+        return "national_id";
     }
 }

@@ -19,7 +19,7 @@ public class ClientsController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task<ActionResult<RegisterClientResponseDto>> RegisterClient([FromBody] RegisterClientRequestDto request)
+    public async Task<ActionResult<ClientRegistrationWithEposDto>> RegisterClient([FromBody] RegisterClientRequestDto request)
     {
         var userId = GetCurrentUserId();
         var result = await _clientService.RegisterNewClientAsync(request, userId);

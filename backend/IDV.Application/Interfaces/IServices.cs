@@ -22,7 +22,7 @@ public interface IIDVerificationService
 
 public interface IClientRegistrationService
 {
-    Task<RegisterClientResponseDto> RegisterNewClientAsync(RegisterClientRequestDto request, Guid registeredByUserId);
+    Task<ClientRegistrationWithEposDto> RegisterNewClientAsync(RegisterClientRequestDto request, Guid registeredByUserId);
     Task<ClientDetailsDto?> GetClientDetailsAsync(Guid registrationId);
     Task<ClientDetailsDto> UpdateClientInfoAsync(Guid registrationId, UpdateClientDto request);
     Task<IEnumerable<ClientDetailsDto>> GetAllRegisteredClientsAsync();

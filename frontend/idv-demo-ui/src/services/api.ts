@@ -1,5 +1,18 @@
 import axios, { AxiosResponse } from 'axios';
-import { LoginRequest, LoginResponse, IDVerificationRequest, IDVerificationResponse, ClientRegistrationRequest, Product, RegisteredClient, DashboardStats, MultiSourceVerificationResponse, AvailableTestId } from '../types';
+import { 
+  LoginRequest, 
+  LoginResponse, 
+  User, 
+  IDVerificationRequest,
+  IDVerificationResponse,
+  MultiSourceVerificationResponse,
+  AvailableTestId,
+  ClientRegistrationRequest,
+  RegisteredClient,
+  ClientRegistrationWithEpos,
+  Product,
+  DashboardStats
+} from '../types';
 
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5161/api';
 
@@ -82,8 +95,8 @@ export const verificationAPI = {
 
 // Client API
 export const clientAPI = {
-  register: async (request: ClientRegistrationRequest): Promise<RegisteredClient> => {
-    const response: AxiosResponse<RegisteredClient> = await apiClient.post('/clients/register', request);
+  register: async (request: ClientRegistrationRequest): Promise<ClientRegistrationWithEpos> => {
+    const response: AxiosResponse<ClientRegistrationWithEpos> = await apiClient.post('/clients/register', request);
     return response.data;
   },
 
@@ -129,6 +142,29 @@ export const productAPI = {
 export const dashboardAPI = {
   getStats: async (): Promise<DashboardStats> => {
     const response: AxiosResponse<DashboardStats> = await apiClient.get('/dashboard/stats');
+    return response.data;
+  }
+};
+
+// Reports API
+export const reportsAPI = {
+  generateClientReport: async (): Promise<any> => {
+    const response: AxiosResponse<any> = await apiClient.get('/reports/clients');
+    return response.data;
+  },
+  
+  getDashboardStatistics: async (): Promise<any> => {
+    const response: AxiosResponse<any> = await apiClient.get('/reports/dashboard-statistics');
+    return response.data;
+  },
+  
+  exportToExcel: async (): Promise<any> => {
+    const response: AxiosResponse<any> = await apiClient.get('/reports/export/excel');
+    return response.data;
+  },
+  
+  exportToPdf: async (): Promise<any> => {
+    const response: AxiosResponse<any> = await apiClient.get('/reports/export/pdf');
     return response.data;
   }
 };

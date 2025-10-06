@@ -22,14 +22,41 @@ public static class DatabaseSeeder
             await SeedUsers(context);
         }
 
-        // Seed Products only if they don't exist
-        if (!await context.Products.AnyAsync())
-        {
-            await SeedProducts(context);
-        }
+        // Clear and reseed Products properly (handle foreign key constraints)
+        await ClearAndSeedProducts(context);
 
         // Always reseed IDSourceClients with correct formats
         await SeedIDSourceClients(context);
+
+        // Seed some registered clients with products for testing
+        await SeedRegisteredClientsWithProducts(context);
+    }
+
+    private static async Task ClearAndSeedProducts(IDVDbContext context)
+    {
+        // First, delete all ClientProducts (which reference Products)
+        if (await context.ClientProducts.AnyAsync())
+        {
+            context.ClientProducts.RemoveRange(await context.ClientProducts.ToListAsync());
+            await context.SaveChangesAsync();
+        }
+
+        // Then delete all RegisteredClients (which might reference IDSourceClients)
+        if (await context.RegisteredClients.AnyAsync())
+        {
+            context.RegisteredClients.RemoveRange(await context.RegisteredClients.ToListAsync());
+            await context.SaveChangesAsync();
+        }
+
+        // Now we can safely delete Products
+        if (await context.Products.AnyAsync())
+        {
+            context.Products.RemoveRange(await context.Products.ToListAsync());
+            await context.SaveChangesAsync();
+        }
+
+        // Finally, seed the new products
+        await SeedProducts(context);
     }
 
     private static async Task SeedUsers(IDVDbContext context)
@@ -78,15 +105,15 @@ public static class DatabaseSeeder
     {
         var products = new List<Product>
         {
-            // Life Insurance (6 products)
+            // LIFE INSURANCE PRODUCTS
             new Product
             {
                 ProductId = Guid.NewGuid(),
                 ProductCode = "LIFE001",
-                ProductName = "Term Life Cover",
-                Category = "Life",
-                Description = "Basic death benefit coverage for a specified term period.",
-                PremiumAmount = 50.00m,
+                ProductName = "Pru Flexi Farewell Plan",
+                Category = "Life Insurance",
+                Description = "Affordable funeral cover for you and your family",
+                PremiumAmount = 325.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -95,10 +122,10 @@ public static class DatabaseSeeder
             {
                 ProductId = Guid.NewGuid(),
                 ProductCode = "LIFE002",
-                ProductName = "Whole Life Assurance",
-                Category = "Life",
-                Description = "Lifetime coverage with cash value accumulation.",
-                PremiumAmount = 120.00m,
+                ProductName = "Pru Term Life Assurance",
+                Category = "Life Insurance",
+                Description = "Pure life protection for a specified term",
+                PremiumAmount = 850.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -107,10 +134,10 @@ public static class DatabaseSeeder
             {
                 ProductId = Guid.NewGuid(),
                 ProductCode = "LIFE003",
-                ProductName = "Endowment Policy",
-                Category = "Life",
-                Description = "Savings plus insurance combination product.",
-                PremiumAmount = 200.00m,
+                ProductName = "Pru Whole Life Plan",
+                Category = "Life Insurance",
+                Description = "Lifetime protection with cash value accumulation",
+                PremiumAmount = 1750.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -119,10 +146,10 @@ public static class DatabaseSeeder
             {
                 ProductId = Guid.NewGuid(),
                 ProductCode = "LIFE004",
-                ProductName = "Unit-Linked Life Plan",
-                Category = "Life",
-                Description = "Investment-linked life insurance with market returns.",
-                PremiumAmount = 300.00m,
+                ProductName = "Pru Family Protection Plan",
+                Category = "Life Insurance",
+                Description = "Comprehensive cover for entire family",
+                PremiumAmount = 1150.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -131,10 +158,24 @@ public static class DatabaseSeeder
             {
                 ProductId = Guid.NewGuid(),
                 ProductCode = "LIFE005",
-                ProductName = "Family Protection Plan",
-                Category = "Life",
-                Description = "Comprehensive family coverage with multiple beneficiaries.",
-                PremiumAmount = 180.00m,
+                ProductName = "Pru Endowment Policy",
+                Category = "Life Insurance",
+                Description = "Savings plus life protection with maturity benefit",
+                PremiumAmount = 1450.00m,
+                Currency = "ZMW",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+
+            // SAVINGS & INVESTMENT PRODUCTS
+            new Product
+            {
+                ProductId = Guid.NewGuid(),
+                ProductCode = "SAV001",
+                ProductName = "Smart Saver Plan",
+                Category = "Savings & Investment",
+                Description = "Grow your wealth while enjoying life protection",
+                PremiumAmount = 2625.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -142,110 +183,60 @@ public static class DatabaseSeeder
             new Product
             {
                 ProductId = Guid.NewGuid(),
-                ProductCode = "LIFE006",
-                ProductName = "Funeral Cover",
-                Category = "Life",
-                Description = "Immediate payout for funeral expenses.",
-                PremiumAmount = 25.00m,
+                ProductCode = "SAV002",
+                ProductName = "Smart Child Plan",
+                Category = "Savings & Investment",
+                Description = "Secure your child's education and future",
+                PremiumAmount = 1600.00m,
+                Currency = "ZMW",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new Product
+            {
+                ProductId = Guid.NewGuid(),
+                ProductCode = "SAV003",
+                ProductName = "Pru Education Endowment",
+                Category = "Savings & Investment",
+                Description = "Dedicated education savings for your children",
+                PremiumAmount = 2150.00m,
+                Currency = "ZMW",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new Product
+            {
+                ProductId = Guid.NewGuid(),
+                ProductCode = "SAV004",
+                ProductName = "Pru Investment Plus",
+                Category = "Savings & Investment",
+                Description = "Unit-linked plan with investment growth potential",
+                PremiumAmount = 5250.00m,
+                Currency = "ZMW",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new Product
+            {
+                ProductId = Guid.NewGuid(),
+                ProductCode = "SAV005",
+                ProductName = "Pru Retirement Builder",
+                Category = "Savings & Investment",
+                Description = "Build your retirement nest egg systematically",
+                PremiumAmount = 4200.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             },
 
-            // Health & Protection (5 products)
+            // HEALTH & PROTECTION PRODUCTS
             new Product
             {
                 ProductId = Guid.NewGuid(),
                 ProductCode = "HEALTH001",
-                ProductName = "Critical Illness Cover",
-                Category = "Health",
-                Description = "Coverage for cancer, heart attack, stroke and other critical illnesses.",
-                PremiumAmount = 80.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "HEALTH002",
-                ProductName = "Personal Accident Plan",
-                Category = "Health",
-                Description = "Protection against disability or death from accidents.",
-                PremiumAmount = 60.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "HEALTH003",
-                ProductName = "Income Protection",
-                Category = "Health",
-                Description = "Salary replacement during illness or disability.",
-                PremiumAmount = 150.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "HEALTH004",
-                ProductName = "Hospital Cash Plan",
-                Category = "Health",
-                Description = "Daily hospital allowance for medical treatment.",
-                PremiumAmount = 40.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "HEALTH005",
-                ProductName = "Comprehensive Medical Cover",
-                Category = "Health",
-                Description = "Full hospitalization and medical expenses coverage.",
-                PremiumAmount = 250.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-
-            // Savings & Investment (5 products)
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "SAVE001",
-                ProductName = "Smart Save Plan",
-                Category = "Savings",
-                Description = "Guaranteed returns with annual bonus potential.",
-                PremiumAmount = 100.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "SAVE002",
-                ProductName = "Education Endowment",
-                Category = "Savings",
-                Description = "Child education fund with maturity benefits.",
-                PremiumAmount = 75.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "SAVE003",
-                ProductName = "Balanced Investment Fund",
-                Category = "Savings",
-                Description = "Mixed portfolio of stocks and bonds.",
+                ProductName = "PruCare24 Telemedicine",
+                Category = "Health & Protection",
+                Description = "24/7 access to medical professionals via phone/app",
                 PremiumAmount = 200.00m,
                 Currency = "ZMW",
                 IsActive = true,
@@ -254,11 +245,11 @@ public static class DatabaseSeeder
             new Product
             {
                 ProductId = Guid.NewGuid(),
-                ProductCode = "SAVE004",
-                ProductName = "Equity Growth Fund",
-                Category = "Savings",
-                Description = "Stock market exposure for long-term growth.",
-                PremiumAmount = 300.00m,
+                ProductCode = "HEALTH002",
+                ProductName = "Medical Insurance - Bronze",
+                Category = "Health & Protection",
+                Description = "Basic medical cover for outpatient and inpatient",
+                PremiumAmount = 475.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -266,25 +257,11 @@ public static class DatabaseSeeder
             new Product
             {
                 ProductId = Guid.NewGuid(),
-                ProductCode = "SAVE005",
-                ProductName = "Fixed Income Plan",
-                Category = "Savings",
-                Description = "Stable returns through government and corporate bonds.",
-                PremiumAmount = 150.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-
-            // Pensions/Retirement (4 products)
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "PENSION001",
-                ProductName = "Individual Retirement Account",
-                Category = "Pension",
-                Description = "Personal pension savings with tax benefits.",
-                PremiumAmount = 250.00m,
+                ProductCode = "HEALTH003",
+                ProductName = "Medical Insurance - Silver",
+                Category = "Health & Protection",
+                Description = "Enhanced medical benefits including maternity",
+                PremiumAmount = 925.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -292,11 +269,11 @@ public static class DatabaseSeeder
             new Product
             {
                 ProductId = Guid.NewGuid(),
-                ProductCode = "PENSION002",
-                ProductName = "Group Pension Scheme",
-                Category = "Pension",
-                Description = "Employer-sponsored retirement benefits.",
-                PremiumAmount = 400.00m,
+                ProductCode = "HEALTH004",
+                ProductName = "Medical Insurance - Gold",
+                Category = "Health & Protection",
+                Description = "Premium medical cover with evacuation",
+                PremiumAmount = 2000.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -304,61 +281,11 @@ public static class DatabaseSeeder
             new Product
             {
                 ProductId = Guid.NewGuid(),
-                ProductCode = "PENSION003",
-                ProductName = "Immediate Annuity",
-                Category = "Pension",
-                Description = "Convert lump sum to guaranteed monthly income.",
-                PremiumAmount = 500.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "PENSION004",
-                ProductName = "Deferred Annuity",
-                Category = "Pension",
-                Description = "Future retirement income starting at specified age.",
-                PremiumAmount = 180.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-
-            // Asset Management (3 products)
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "ASSET001",
-                ProductName = "Property Investment Fund",
-                Category = "Asset",
-                Description = "Real estate portfolio for capital appreciation.",
-                PremiumAmount = 600.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "ASSET002",
-                ProductName = "Money Market Fund",
-                Category = "Asset",
-                Description = "Short-term investment instruments for liquidity.",
-                PremiumAmount = 100.00m,
-                Currency = "ZMW",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            },
-            new Product
-            {
-                ProductId = Guid.NewGuid(),
-                ProductCode = "ASSET003",
-                ProductName = "Aggressive Growth Portfolio",
-                Category = "Asset",
-                Description = "High-risk, high-return investment strategy.",
-                PremiumAmount = 800.00m,
+                ProductCode = "HEALTH005",
+                ProductName = "Medical Insurance - Platinum",
+                Category = "Health & Protection",
+                Description = "Comprehensive medical with international cover",
+                PremiumAmount = 4000.00m,
                 Currency = "ZMW",
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
@@ -674,5 +601,105 @@ public static class DatabaseSeeder
         var checkDigit = random.Next(1, 9); // Check digit 1-9
         
         return $"{dateStr}/{districtCode:D2}/{checkDigit}";
+    }
+
+    private static async Task SeedRegisteredClientsWithProducts(IDVDbContext context)
+    {
+        // Only seed if there are no registered clients yet
+        if (await context.RegisteredClients.AnyAsync())
+        {
+            return; // Already have registered clients
+        }
+
+        // Get available products and users for seeding
+        var products = await context.Products.ToListAsync();
+        var users = await context.Users.ToListAsync();
+        var adminUser = users.FirstOrDefault(u => u.Role == "Admin");
+
+        if (products.Count == 0 || adminUser == null)
+        {
+            Console.WriteLine("Cannot seed registered clients: missing products or admin user");
+            return;
+        }
+
+        var random = new Random();
+        var registeredClients = new List<RegisteredClient>();
+
+        // Create 10 sample registered clients based on some IDSourceClients
+        var sampleIdSourceClients = await context.IDSourceClients
+            .Where(c => c.IDType == "NationalID")
+            .Take(10)
+            .ToListAsync();
+
+        foreach (var idClient in sampleIdSourceClients)
+        {
+            var registeredClient = new RegisteredClient
+            {
+                RegistrationId = Guid.NewGuid(),
+                ClientId = idClient.ClientId,
+                IDNumber = idClient.IDNumber,
+                FullName = idClient.FullName,
+                DateOfBirth = idClient.DateOfBirth,
+                Gender = idClient.Gender,
+                MobileNumber = idClient.MobileNumber,
+                Email = GenerateEmail(idClient.FullName),
+                Province = idClient.Province,
+                District = idClient.District,
+                PostalCode = idClient.PostalCode,
+                Status = "Active",
+                RegistrationDate = DateTime.UtcNow.AddDays(-random.Next(1, 30)),
+                RegisteredByUserId = adminUser.UserId
+            };
+
+            registeredClients.Add(registeredClient);
+        }
+
+        await context.RegisteredClients.AddRangeAsync(registeredClients);
+        await context.SaveChangesAsync();
+
+        // Now create ClientProducts relationships
+        var clientProducts = new List<ClientProduct>();
+        
+        foreach (var client in registeredClients)
+        {
+            // Each client gets 1-3 random products
+            var numProducts = random.Next(1, 4);
+            var clientProductsList = products.OrderBy(x => random.Next()).Take(numProducts).ToList();
+
+            foreach (var product in clientProductsList)
+            {
+                clientProducts.Add(new ClientProduct
+                {
+                    ClientProductId = Guid.NewGuid(),
+                    RegistrationId = client.RegistrationId,
+                    ProductId = product.ProductId,
+                    EnrollmentDate = client.RegistrationDate.AddDays(random.Next(0, 5)),
+                    Status = "Active",
+                    PremiumAmount = product.PremiumAmount,
+                    PolicyNumber = GeneratePolicyNumber(product.ProductCode),
+                    StartDate = client.RegistrationDate.AddDays(random.Next(0, 5)),
+                    EndDate = DateTime.UtcNow.AddYears(1) // 1 year policy
+                });
+            }
+        }
+
+        await context.ClientProducts.AddRangeAsync(clientProducts);
+        await context.SaveChangesAsync();
+
+        Console.WriteLine($"Seeded {registeredClients.Count} registered clients with {clientProducts.Count} product relationships");
+    }
+
+    private static string GenerateEmail(string fullName)
+    {
+        var nameParts = fullName.ToLower().Split(' ');
+        var firstName = nameParts[0];
+        var lastName = nameParts.Length > 1 ? nameParts[1] : "user";
+        return $"{firstName}.{lastName}@example.com";
+    }
+
+    private static string GeneratePolicyNumber(string productCode)
+    {
+        var random = new Random();
+        return $"{productCode}-{DateTime.Now.Year}-{random.Next(10000, 99999)}";
     }
 }

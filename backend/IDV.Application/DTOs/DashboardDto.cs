@@ -5,6 +5,9 @@ namespace IDV.Application.DTOs
         public int TotalClients { get; set; }
         public int TotalVerifications { get; set; }
         public int TotalProducts { get; set; }
+        public int TodayRegistrations { get; set; }
+        public double SuccessRate { get; set; }
+        public double AvgResponseTime { get; set; }
         public List<ActivityLogDto> RecentActivity { get; set; } = new();
     }
 

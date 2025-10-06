@@ -111,6 +111,11 @@ export interface Product {
   createdAt: string;
 }
 
+export interface EnhancedProduct extends Product {
+  premiumRange: string;
+  coverageRange: string;
+}
+
 // UI State Types
 export interface LoadingState {
   isLoading: boolean;
@@ -131,9 +136,18 @@ export interface FormErrors {
 // Dashboard Types
 export interface DashboardStats {
   totalClients: number;
+  todayRegistrations: number;
   totalVerifications: number;
   totalProducts: number;
+  successRate: number;
+  avgResponseTime: number;
   recentActivity: ActivityLog[];
+}
+
+export interface VerificationSourceStats {
+  source: string;
+  count: number;
+  percentage: number;
 }
 
 export interface ActivityLog {
@@ -194,4 +208,40 @@ export interface AvailableTestId {
   fullName: string;
   source: string;
   displaySource: string;
+}
+
+// EPOS Integration Types
+export interface EposPayload {
+  id_type: string;
+  id_number: string;
+  full_name: string;
+  date_of_birth: string;
+  gender: string;
+  mobile_number: string;
+  address: {
+    province: string;
+    district: string;
+    postal_code: string;
+  };
+  source: string;
+  captured_by: string;
+  capture_timestamp: string;
+  products?: EposProduct[];
+}
+
+export interface EposProduct {
+  productId: string;
+  productName: string;
+  productCode: string;
+  premiumAmount: number;
+  policyNumber: string;
+  status: string;
+}
+
+export interface ClientRegistrationWithEpos {
+  success: boolean;
+  message: string;
+  registrationId: string;
+  client: RegisteredClient;
+  eposPayload: EposPayload;
 }

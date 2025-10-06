@@ -40,6 +40,7 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IIDVerificationService, IDVerificationService>();
 builder.Services.AddScoped<IClientRegistrationService, ClientRegistrationService>();
+builder.Services.AddScoped<IReportingService, ReportingService>();
 
 // Add JWT Authentication
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");

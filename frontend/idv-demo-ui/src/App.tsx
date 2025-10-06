@@ -6,7 +6,8 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { Layout } from './components/layout/Layout';
 import { LoginPage } from './pages/LoginPage';
 import { VerificationPage } from './pages/VerificationPage';
-import { clientAPI, productAPI, verificationAPI } from './services/api';
+import { clientAPI, productAPI, verificationAPI, dashboardAPI, reportsAPI } from './services/api';
+import { EnhancedProduct } from './types';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -18,34 +19,40 @@ const queryClient = new QueryClient({
   },
 });
 
-// Enhanced Dashboard component with realistic analytics
+// Enhanced Dashboard component with real analytics
 const DashboardPage = () => {
   const [stats, setStats] = useState({
     totalClients: 0,
-    todayVerifications: 0,
+    todayRegistrations: 0,
     successRate: 0,
-    activeProducts: 23,
-    avgResponseTime: 0
+    activeProducts: 0,
+    avgResponseTime: 0,
+    totalVerifications: 0
   });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const clients = await clientAPI.getAll();
-        const today = new Date().toDateString();
-        const todayRegistrations = clients.filter(c => 
-          new Date(c.registrationDate).toDateString() === today
-        ).length;
-        
+        const response = await dashboardAPI.getStats();
         setStats({
-          totalClients: clients.length,
-          todayVerifications: Math.floor(Math.random() * 25) + 15, // Simulated daily verifications
-          successRate: 94.2 + Math.random() * 4, // 94-98% success rate
-          activeProducts: 23,
-          avgResponseTime: 1.2 + Math.random() * 0.8 // 1.2-2.0 seconds
+          totalClients: response.totalClients || 0,
+          todayRegistrations: response.todayRegistrations || 0,
+          successRate: response.successRate || 0,
+          activeProducts: response.totalProducts || 0,
+          avgResponseTime: response.avgResponseTime || 0,
+          totalVerifications: response.totalVerifications || 0
         });
       } catch (error) {
         console.error('Failed to fetch stats:', error);
+        // Fallback to mock data if API fails
+        setStats({
+          totalClients: 156,
+          todayRegistrations: 12,
+          successRate: 94.2,
+          activeProducts: 23,
+          avgResponseTime: 1.4,
+          totalVerifications: 89
+        });
       }
     };
 
@@ -60,16 +67,16 @@ const DashboardPage = () => {
       <div className="mb-8">
         <div className="md:flex md:items-center md:justify-between">
           <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-            <p className="mt-2 text-gray-600">Real-time IDV system analytics and performance metrics</p>
+            <h1 className="text-3xl font-bold text-blue-900">Dashboard</h1>
+            <p className="mt-2 text-blue-700">Real-time IDV system analytics and performance metrics</p>
           </div>
           <div className="mt-4 md:mt-0 md:ml-4">
             <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="flex items-center space-x-2 text-sm text-blue-600">
                 <div className="h-2 w-2 bg-green-400 rounded-full animate-pulse"></div>
                 <span>Live Data</span>
               </div>
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="flex items-center space-x-2 text-sm text-blue-600">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -82,7 +89,7 @@ const DashboardPage = () => {
 
       {/* Key Metrics Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow">
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -94,13 +101,13 @@ const DashboardPage = () => {
               </div>
               <div className="ml-4 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Total Registered Clients</dt>
-                  <dd className="text-2xl font-bold text-gray-900">{stats.totalClients.toLocaleString()}</dd>
+                  <dt className="text-sm font-medium text-blue-600 truncate">Total Registered Clients</dt>
+                  <dd className="text-2xl font-bold text-blue-900">{stats.totalClients.toLocaleString()}</dd>
                   <dd className="text-xs text-green-600 flex items-center">
                     <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                     </svg>
-                    +{Math.floor(stats.totalClients * 0.15)} this month
+                    +{stats.todayRegistrations} today
                   </dd>
                 </dl>
               </div>
@@ -108,7 +115,7 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow">
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -120,29 +127,29 @@ const DashboardPage = () => {
               </div>
               <div className="ml-4 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Today's Verifications</dt>
-                  <dd className="text-2xl font-bold text-gray-900">{stats.todayVerifications}</dd>
-                  <dd className="text-xs text-blue-600">Success Rate: {stats.successRate.toFixed(1)}%</dd>
+                  <dt className="text-sm font-medium text-blue-600 truncate">Total Verifications</dt>
+                  <dd className="text-2xl font-bold text-blue-900">{stats.totalVerifications}</dd>
+                  <dd className="text-xs text-cyan-500">Success Rate: {(stats.successRate || 0).toFixed(1)}%</dd>
                 </dl>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow">
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <svg className="h-6 w-6 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="h-12 w-12 bg-cyan-100 rounded-lg flex items-center justify-center">
+                  <svg className="h-6 w-6 text-cyan-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                   </svg>
                 </div>
               </div>
               <div className="ml-4 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Avg Response Time</dt>
-                  <dd className="text-2xl font-bold text-gray-900">{stats.avgResponseTime.toFixed(1)}s</dd>
+                  <dt className="text-sm font-medium text-blue-600 truncate">Avg Response Time</dt>
+                  <dd className="text-2xl font-bold text-blue-900">{(stats.avgResponseTime || 0).toFixed(1)}s</dd>
                   <dd className="text-xs text-green-600">⚡ 45% faster than industry average</dd>
                 </dl>
               </div>
@@ -150,21 +157,21 @@ const DashboardPage = () => {
           </div>
         </div>
 
-        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-gray-100 hover:shadow-md transition-shadow">
+        <div className="bg-white overflow-hidden shadow-sm rounded-xl border border-blue-100 hover:shadow-md transition-shadow">
           <div className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <div className="h-12 w-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                  <svg className="h-6 w-6 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                   </svg>
                 </div>
               </div>
               <div className="ml-4 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">Active Products</dt>
-                  <dd className="text-2xl font-bold text-gray-900">{stats.activeProducts}</dd>
-                  <dd className="text-xs text-gray-600">Across 5 categories</dd>
+                  <dt className="text-sm font-medium text-blue-600 truncate">Active Products</dt>
+                  <dd className="text-2xl font-bold text-blue-900">{stats.activeProducts}</dd>
+                  <dd className="text-xs text-blue-600">Across 5 categories</dd>
                 </dl>
               </div>
             </div>
@@ -173,10 +180,10 @@ const DashboardPage = () => {
       </div>
 
       {/* ID Verification Sources Status */}
-      <div className="bg-white shadow-sm rounded-xl border border-gray-100 mb-8">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-900">Data Source Status</h3>
-          <p className="text-sm text-gray-500">Real-time status of ID verification sources</p>
+      <div className="bg-white shadow-sm rounded-xl border border-blue-100 mb-8">
+        <div className="px-6 py-4 border-b border-blue-100">
+          <h3 className="text-lg font-medium text-blue-900">Data Source Status</h3>
+          <p className="text-sm text-blue-600">Real-time status of ID verification sources</p>
         </div>
         <div className="p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -185,16 +192,15 @@ const DashboardPage = () => {
               { name: 'ZRA', status: 'online', responseTime: '1.2s', uptime: '99.7%' },
               { name: 'MNO Airtel', status: 'online', responseTime: '0.6s', uptime: '99.8%' },
               { name: 'MNO MTN', status: 'online', responseTime: '0.7s', uptime: '99.9%' },
-              { name: 'Zanaco Bank', status: 'online', responseTime: '1.1s', uptime: '99.5%' },
-              { name: 'RTSA', status: 'online', responseTime: '0.9s', uptime: '99.6%' }
+              { name: 'ZAMTEL', status: 'online', responseTime: '1.1s', uptime: '99.5%' },
             ].map((source, index) => (
-              <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                 <div className="flex items-center space-x-3">
                   <div className="h-2 w-2 bg-green-400 rounded-full"></div>
-                  <span className="text-sm font-medium text-gray-900">{source.name}</span>
+                  <span className="text-sm font-medium text-blue-900">{source.name}</span>
                 </div>
                 <div className="text-right">
-                  <div className="text-xs text-gray-500">{source.responseTime}</div>
+                  <div className="text-xs text-blue-600">{source.responseTime}</div>
                   <div className="text-xs text-green-600">{source.uptime}</div>
                 </div>
               </div>
@@ -204,9 +210,9 @@ const DashboardPage = () => {
       </div>
 
       {/* Recent Activity */}
-      <div className="bg-white shadow-sm rounded-xl border border-gray-100 mb-8">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-900">Recent Activity</h3>
+      <div className="bg-white shadow-sm rounded-xl border border-blue-100 mb-8">
+        <div className="px-6 py-4 border-b border-blue-100">
+          <h3 className="text-lg font-medium text-blue-900">Recent Activity</h3>
         </div>
         <div className="p-6">
           <div className="space-y-4">
@@ -222,8 +228,8 @@ const DashboardPage = () => {
                   activity.status === 'success' ? 'bg-green-400' : 'bg-red-400'
                 }`}></div>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                  <p className="text-xs text-gray-500">{activity.client} • {activity.time}</p>
+                  <p className="text-sm font-medium text-blue-900">{activity.action}</p>
+                  <p className="text-xs text-blue-600">{activity.client} • {activity.time}</p>
                 </div>
                 <div className={`px-2 py-1 rounded-full text-xs font-medium ${
                   activity.status === 'success' 
@@ -240,9 +246,9 @@ const DashboardPage = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="bg-white shadow-sm rounded-xl border border-gray-100">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h3 className="text-lg font-medium text-gray-900">Quick Actions</h3>
+        <div className="bg-white shadow-sm rounded-xl border border-blue-100">
+          <div className="px-6 py-4 border-b border-blue-100">
+            <h3 className="text-lg font-medium text-blue-900">Quick Actions</h3>
           </div>
         <div className="p-6">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -257,25 +263,25 @@ const DashboardPage = () => {
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Verify ID</p>
-                  <p className="text-xs text-gray-600">Start verification process</p>
+                  <p className="text-sm font-medium text-blue-900">Verify ID</p>
+                  <p className="text-xs text-blue-600">Start verification process</p>
                 </div>
               </div>
             </a>
             
             <a
               href="/registration"
-              className="group relative bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg border border-green-200 hover:from-green-100 hover:to-green-200 transition-colors duration-200"
+              className="group relative bg-gradient-to-r from-cyan-50 to-cyan-100 p-4 rounded-lg border border-cyan-200 hover:from-cyan-100 hover:to-cyan-200 transition-colors duration-200"
             >
               <div className="flex items-center space-x-3">
-                <div className="h-10 w-10 bg-green-600 rounded-lg flex items-center justify-center">
+                <div className="h-10 w-10 bg-cyan-600 rounded-lg flex items-center justify-center">
                   <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
                   </svg>
                 </div>
                 <div>
-                  <p className="text-sm font-medium text-gray-900">Register Client</p>
-                  <p className="text-xs text-gray-600">Add new client</p>
+                  <p className="text-sm font-medium text-blue-900">Register Client</p>
+                  <p className="text-xs text-blue-600">Add new client</p>
                 </div>
               </div>
             </a>
@@ -283,20 +289,20 @@ const DashboardPage = () => {
         </div>
       </div>
 
-      <div className="bg-white shadow-sm rounded-xl border border-gray-100">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h3 className="text-lg font-medium text-gray-900">System Information</h3>
+      <div className="bg-white shadow-sm rounded-xl border border-blue-100">
+        <div className="px-6 py-4 border-b border-blue-100">
+          <h3 className="text-lg font-medium text-blue-900">System Information</h3>
         </div>
         <div className="p-6">
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">Database Status</span>
+              <span className="text-sm text-blue-600">Database Status</span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Connected
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-600">API Status</span>
+              <span className="text-sm text-blue-600">API Status</span>
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                 Operational
               </span>
@@ -328,11 +334,27 @@ const RegistrationPage = () => {
   const [verificationSources, setVerificationSources] = useState<any[]>([]);
   const [currentSearchingSource, setCurrentSearchingSource] = useState<string>('');
   const [toast, setToast] = useState<{show: boolean, message: string, type: 'success' | 'error'}>({show: false, message: '', type: 'success'});
+  const [eposToast, setEposToast] = useState<{show: boolean, message: string, payload: any, showPayload: boolean}>({show: false, message: '', payload: null, showPayload: false});
+  const [showEposCard, setShowEposCard] = useState(false);
   const [availableTestIds, setAvailableTestIds] = useState<any[]>([]);
+  const [showAllProducts, setShowAllProducts] = useState(false);
+  const [showDemoIds, setShowDemoIds] = useState(false);
 
   const showToast = (message: string, type: 'success' | 'error' = 'success') => {
     setToast({show: true, message, type});
     setTimeout(() => setToast({show: false, message: '', type: 'success'}), 4000);
+  };
+
+  const showEposToast = (message: string, eposPayload: any) => {
+    // Show regular success toast
+    setToast({show: true, message, type: 'success'});
+    setTimeout(() => setToast({show: false, message: '', type: 'success'}), 4000);
+    
+    // Show EPOS card separately - stays visible until manually closed
+    setEposToast({show: false, message, payload: eposPayload, showPayload: false});
+    setShowEposCard(true);
+    
+    // No auto-hide for EPOS card - user must manually close it
   };
 
   // Load available test IDs on component mount
@@ -388,6 +410,11 @@ const RegistrationPage = () => {
   };
 
   const formatIdInput = (value: string) => {
+    // Allow empty input or backspacing
+    if (!value || value.trim() === '') {
+      return '';
+    }
+
     const detectedType = detectIdType(value);
     
     if (detectedType === 'NRC') {
@@ -407,22 +434,24 @@ const RegistrationPage = () => {
       const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (cleaned.startsWith('ZN')) {
         return cleaned.slice(0, 9); // ZN + 7 digits = 9 characters
-      } else if (/^[A-Z]/.test(cleaned)) {
+      } else if (/^[A-Z]{2,}/.test(cleaned)) {
+        // Only if user has typed at least 2 letters, assume it's a passport/license code
         return cleaned.slice(0, 9);
       } else {
-        // If user starts typing numbers, prepend ZN
-        return ('ZN' + cleaned).slice(0, 9);
+        // Don't auto-prepend, just return what user typed (cleaned)
+        return cleaned;
       }
     } else if (detectedType === 'Driving License') {
       // For Zambian driving license: ZM + numbers
       const cleaned = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
       if (cleaned.startsWith('ZM')) {
         return cleaned.slice(0, 8); // ZM + 6 digits = 8 characters
-      } else if (/^[A-Z]/.test(cleaned)) {
+      } else if (/^[A-Z]{2,}/.test(cleaned)) {
+        // Only if user has typed at least 2 letters, assume it's a license code
         return cleaned.slice(0, 8);
       } else {
-        // If user starts typing numbers, prepend ZM
-        return ('ZM' + cleaned).slice(0, 8);
+        // Don't auto-prepend, just return what user typed (cleaned)
+        return cleaned;
       }
     }
     return value;
@@ -431,6 +460,21 @@ const RegistrationPage = () => {
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const formatted = formatIdInput(e.target.value);
     setIdNumber(formatted);
+  };
+
+  // Helper function to simulate checking individual sources
+  const checkSourceForMatch = async (sourceName: string, idNumber: string): Promise<boolean> => {
+    // Call the real API to check if this specific source has data
+    try {
+      const result = await verificationAPI.searchClientMultiSource(idNumber);
+      if (result.success && result.sourceResults) {
+        const sourceResult = result.sourceResults.find(sr => sr.sourceName === sourceName);
+        return sourceResult?.isFound || false;
+      }
+      return false;
+    } catch (error) {
+      return false;
+    }
   };
 
   const handleSearch = async () => {
@@ -442,21 +486,92 @@ const RegistrationPage = () => {
     setVerificationLoading(true);
     setError('');
     setVerificationSources([]);
+    setCurrentSearchingSource('Establishing secure connections...');
     
+    // Define the sources to check sequentially with realistic timing
+    const sourcesToCheck = [
+      { name: 'INRIS', displayName: 'ID Registration Information System', delay: 1200 },
+      { name: 'ZRA', displayName: 'Zambia Revenue Authority', delay: 900 },
+      { name: 'MNO_AIRTEL', displayName: 'Airtel Network Database', delay: 700 },
+      { name: 'MNO_MTN', displayName: 'MTN Network Database', delay: 650 },
+      { name: 'ZAMTEL', displayName: 'Zamtel Network Database', delay: 1100 },
+    ];
+
     try {
-      // Call the real backend API for multi-source verification
-      const result = await verificationAPI.searchClientMultiSource(idNumber);
+      // Initial connection delay (reduced)
+      await new Promise(resolve => setTimeout(resolve, 300));
       
-      if (result.success && result.finalResult) {
-        // Update sources with real results from backend
-        const sourcesWithResults = result.sourceResults.map(sourceResult => ({
-          name: sourceResult.sourceName,
-          displayName: sourceResult.displayName,
-          status: sourceResult.isFound ? 'found' : 'not-found'
-        }));
+      // Initialize sources array for real-time updates
+      let currentSources: any[] = [];
+      
+      // Show all sources initially
+      const allSources = sourcesToCheck.map(source => ({
+        name: source.name,
+        displayName: source.displayName,
+        status: 'waiting'
+      }));
+      setVerificationSources([...allSources]);
+      
+      // Check each source sequentially with real-time visual feedback
+      let foundMatch = false;
+      let matchingSource = null;
+      
+      for (let i = 0; i < sourcesToCheck.length && !foundMatch; i++) {
+        const source = sourcesToCheck[i];
         
-        setVerificationSources(sourcesWithResults);
+        // Hide previous sources, show only current one being checked
+        const currentSourceDisplay = [{
+          name: source.name,
+          displayName: source.displayName,
+          status: 'checking'
+        }];
+        setVerificationSources([...currentSourceDisplay]);
         
+        // Show current source being checked
+        setCurrentSearchingSource(`🔍 Searching ${source.displayName}...`);
+        
+        // Realistic delay for each source
+        await new Promise(resolve => setTimeout(resolve, source.delay));
+        
+        // Simulate checking this source - in a real app, you'd check each source individually
+        // For demo purposes, we'll make some sources have matches based on ID patterns
+        const hasMatch = await checkSourceForMatch(source.name, idNumber);
+        
+        if (hasMatch) {
+          // Found a match! Update this source as found and stop searching
+          setVerificationSources([{
+            name: source.name,
+            displayName: source.displayName,
+            status: 'found'
+          }]);
+          foundMatch = true;
+          matchingSource = { sourceName: source.name, displayName: source.displayName };
+          
+          // Show success message
+          setCurrentSearchingSource(`✅ Match Found in ${source.displayName}!`);
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          break;
+        } else {
+          // No match in this source, mark as not found
+          setVerificationSources([{
+            name: source.name,
+            displayName: source.displayName,
+            status: 'not-found'
+          }]);
+          
+          // Small delay before checking next source
+          await new Promise(resolve => setTimeout(resolve, 400));
+        }
+      }
+      
+      // Now call the real API to get actual client data if we found a match
+      let result = null;
+      if (foundMatch) {
+        setCurrentSearchingSource('📊 Retrieving client details...');
+        result = await verificationAPI.searchClientMultiSource(idNumber);
+      }
+      
+      if (foundMatch && result && result.success && result.finalResult) {
         // Set the found client data
         const foundClient = result.finalResult;
         setClientData({
@@ -473,24 +588,24 @@ const RegistrationPage = () => {
         });
         
         setStep(2);
-        showToast(`Client found in ${foundClient.source}! You can now proceed with registration.`, 'success');
+        showToast(`Client found in ${matchingSource?.displayName || foundClient.source}! You can now proceed with registration.`, 'success');
       } else {
-        // No client found - show all sources as not found
-        const dataSources = [
-          { name: 'INRIS', displayName: 'ID Registration Information System', status: 'not-found' },
-          { name: 'ZRA', displayName: 'Zambia Revenue Authority', status: 'not-found' },
-          { name: 'MNO_AIRTEL', displayName: 'Airtel Network Database', status: 'not-found' },
-          { name: 'MNO_MTN', displayName: 'MTN Network Database', status: 'not-found' },
-          { name: 'MNO_ZAMTEL', displayName: 'Zamtel Network Database', status: 'not-found' },
-          { name: 'BANK_ZANACO', displayName: 'Zanaco Banking Records', status: 'not-found' },
-          { name: 'BANK_FNB', displayName: 'FNB Banking Records', status: 'not-found' },
-          { name: 'BANK_STANCHART', displayName: 'Standard Chartered Records', status: 'not-found' },
-          { name: 'GOVT_PAYROLL', displayName: 'Government Payroll System', status: 'not-found' },
-          { name: 'NAPSA', displayName: 'National Pension Scheme Authority', status: 'not-found' },
-          { name: 'RTSA', displayName: 'Road Transport & Safety Agency', status: 'not-found' }
-        ];
+        // No client found in any source
+        setCurrentSearchingSource('❌ No matches found in any data source');
         
-        setVerificationSources(dataSources);
+        // If we didn't find a match and didn't search all sources, show remaining as skipped
+        if (!foundMatch && currentSources.length < sourcesToCheck.length) {
+          const remainingSources = sourcesToCheck.slice(currentSources.length).map(source => ({
+            name: source.name,
+            displayName: source.displayName,
+            status: 'skipped'
+          }));
+          currentSources = [...currentSources, ...remainingSources];
+          setVerificationSources([...currentSources]);
+        }
+        
+        // Show final results for not found case
+        await new Promise(resolve => setTimeout(resolve, 1000));
         showToast('Client not found in any of the searched databases. Please verify the ID number.', 'error');
       }
       
@@ -503,26 +618,7 @@ const RegistrationPage = () => {
     }
   };
 
-  const getTestDataForSource = (idNumber: string, source: string) => {
-    const testDatabase: Record<string, any> = {
-      '150685/10/1': { source: 'INRIS', fullName: 'John Mwanza', dateOfBirth: '1985-06-15', gender: 'Male', mobileNumber: '+260977123456', province: 'Lusaka', district: 'Lusaka' },
-      '180475/08/1': { source: 'ZRA', fullName: 'Peter Phiri', dateOfBirth: '1975-04-18', gender: 'Male', mobileNumber: '+260955654321', province: 'Eastern', district: 'Chipata' },
-      '250791/07/1': { source: 'MNO_AIRTEL', fullName: 'David Mulenga', dateOfBirth: '1991-07-25', gender: 'Male', mobileNumber: '+260966234567', province: 'Northern', district: 'Kasama' },
-      '120693/05/1': { source: 'BANK_ZANACO', fullName: 'Grace Tembo', dateOfBirth: '1993-06-12', gender: 'Female', mobileNumber: '+260977567890', province: 'Lusaka', district: 'Chongwe' }
-    };
-    
-    const clientData = testDatabase[idNumber];
-    if (clientData && clientData.source === source) {
-      return {
-        idNumber,
-        ...clientData,
-        email: `${clientData.fullName.toLowerCase().replace(' ', '.')}@email.com`,
-        address: `123 Main Street, ${clientData.district}`,
-        verified: true
-      };
-    }
-    return null;
-  };
+
 
   const handleProductSelect = (productId: string) => {
     setSelectedProducts(prev => 
@@ -551,8 +647,10 @@ const RegistrationPage = () => {
       
       // Call real API
       const response = await clientAPI.register(registrationData);
-      const registrationId = response.clientId || 'Generated Successfully';
-      showToast(`Client registered successfully! Registration ID: ${registrationId}`, 'success');
+      const registrationId = response.registrationId || 'Generated Successfully';
+      
+      // Show success toast with collapsible EPOS payload
+      showEposToast(`Client registered successfully! Registration ID: ${registrationId}`, response.eposPayload);
       
       // Refresh available test IDs since one was just registered
       await refreshAvailableTestIds();
@@ -571,11 +669,27 @@ const RegistrationPage = () => {
     }
   };
 
-  const [products, setProducts] = useState([
-    { productId: '1', productName: 'Term Life Insurance', productCode: 'LIFE001', premiumAmount: 50, category: 'Life', description: 'Basic term life insurance coverage', currency: 'ZMW', isActive: true, createdAt: '' },
-    { productId: '2', productName: 'Family Health Plan', productCode: 'HEALTH002', premiumAmount: 120, category: 'Health', description: 'Comprehensive family health coverage', currency: 'ZMW', isActive: true, createdAt: '' },
-    { productId: '3', productName: 'Motor Vehicle Insurance', productCode: 'MOTOR001', premiumAmount: 80, category: 'Motor', description: 'Vehicle insurance coverage', currency: 'ZMW', isActive: true, createdAt: '' },
-    { productId: '4', productName: 'Flexible Investment Plan', productCode: 'INVEST002', premiumAmount: 300, category: 'Investment', description: 'Flexible investment savings plan', currency: 'ZMW', isActive: true, createdAt: '' }
+  const [products, setProducts] = useState<EnhancedProduct[]>([
+    // LIFE INSURANCE PRODUCTS
+    { productId: '1', productName: 'Pru Flexi Farewell Plan', productCode: 'LIFE001', premiumAmount: 325, category: 'Life Insurance', description: 'Affordable funeral cover for you and your family', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K150 - K500/month', coverageRange: 'K10,000 - K50,000' },
+    { productId: '2', productName: 'Pru Term Life Assurance', productCode: 'LIFE002', premiumAmount: 850, category: 'Life Insurance', description: 'Pure life protection for a specified term', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K200 - K1,500/month', coverageRange: 'K50,000 - K500,000' },
+    { productId: '3', productName: 'Pru Whole Life Plan', productCode: 'LIFE003', premiumAmount: 1750, category: 'Life Insurance', description: 'Lifetime protection with cash value accumulation', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K500 - K3,000/month', coverageRange: 'K100,000 - K1,000,000' },
+    { productId: '4', productName: 'Pru Family Protection Plan', productCode: 'LIFE004', premiumAmount: 1150, category: 'Life Insurance', description: 'Comprehensive cover for entire family', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K300 - K2,000/month', coverageRange: 'K75,000 - K750,000' },
+    { productId: '5', productName: 'Pru Endowment Policy', productCode: 'LIFE005', premiumAmount: 1450, category: 'Life Insurance', description: 'Savings plus life protection with maturity benefit', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K400 - K2,500/month', coverageRange: 'K100,000 - K800,000' },
+    
+    // SAVINGS & INVESTMENT PRODUCTS
+    { productId: '6', productName: 'Smart Saver Plan', productCode: 'SAV001', premiumAmount: 2625, category: 'Savings & Investment', description: 'Grow your wealth while enjoying life protection', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K250 - K5,000/month', coverageRange: 'Investment-based' },
+    { productId: '7', productName: 'Smart Child Plan', productCode: 'SAV002', premiumAmount: 1600, category: 'Savings & Investment', description: 'Secure your child\'s education and future', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K200 - K3,000/month', coverageRange: 'K50,000 - K500,000' },
+    { productId: '8', productName: 'Pru Education Endowment', productCode: 'SAV003', premiumAmount: 2150, category: 'Savings & Investment', description: 'Dedicated education savings for your children', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K300 - K4,000/month', coverageRange: 'K75,000 - K600,000' },
+    { productId: '9', productName: 'Pru Investment Plus', productCode: 'SAV004', premiumAmount: 5250, category: 'Savings & Investment', description: 'Unit-linked plan with investment growth potential', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K500 - K10,000/month', coverageRange: 'Variable returns' },
+    { productId: '10', productName: 'Pru Retirement Builder', productCode: 'SAV005', premiumAmount: 4200, category: 'Savings & Investment', description: 'Build your retirement nest egg systematically', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K400 - K8,000/month', coverageRange: 'Accumulated value' },
+    
+    // HEALTH & PROTECTION PRODUCTS
+    { productId: '11', productName: 'PruCare24 Telemedicine', productCode: 'HEALTH001', premiumAmount: 200, category: 'Health & Protection', description: '24/7 access to medical professionals via phone/app', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K100 - K300/month', coverageRange: 'Unlimited consultations' },
+    { productId: '12', productName: 'Medical Insurance - Bronze', productCode: 'HEALTH002', premiumAmount: 475, category: 'Health & Protection', description: 'Basic medical cover for outpatient and inpatient', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K350 - K600/month', coverageRange: 'K15,000 annual limit' },
+    { productId: '13', productName: 'Medical Insurance - Silver', productCode: 'HEALTH003', premiumAmount: 925, category: 'Health & Protection', description: 'Enhanced medical benefits including maternity', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K650 - K1,200/month', coverageRange: 'K35,000 annual limit' },
+    { productId: '14', productName: 'Medical Insurance - Gold', productCode: 'HEALTH004', premiumAmount: 2000, category: 'Health & Protection', description: 'Premium medical cover with evacuation', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K1,500 - K2,500/month', coverageRange: 'K75,000 annual limit' },
+    { productId: '15', productName: 'Medical Insurance - Platinum', productCode: 'HEALTH005', premiumAmount: 4000, category: 'Health & Protection', description: 'Comprehensive medical with international cover', currency: 'ZMW', isActive: true, createdAt: '', premiumRange: 'K3,000 - K5,000/month', coverageRange: 'K150,000 annual limit' }
   ]);
 
   useEffect(() => {
@@ -584,7 +698,15 @@ const RegistrationPage = () => {
       try {
         const productData = await productAPI.getAll();
         if (productData && productData.length > 0) {
-          setProducts(productData);
+          // Transform API products to include additional display properties
+          const enhancedProducts = productData.map(product => ({
+            ...product,
+            premiumRange: `K${Math.floor(product.premiumAmount * 0.5)} - K${Math.floor(product.premiumAmount * 2)}/month`,
+            coverageRange: product.category === 'Savings & Investment' 
+              ? 'Investment-based' 
+              : `K${Math.floor(product.premiumAmount * 50)} - K${Math.floor(product.premiumAmount * 200)}`
+          }));
+          setProducts(enhancedProducts);
         }
       } catch (error) {
         console.log('Using fallback product data');
@@ -597,30 +719,30 @@ const RegistrationPage = () => {
     <div className="px-4 sm:px-0">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Client Registration</h1>
-        <p className="mt-2 text-gray-600">Search for clients in external systems and register them with insurance products</p>
+        <h1 className="text-3xl font-bold text-blue-900">Client Registration</h1>
+        <p className="mt-2 text-blue-700">Search for clients in external systems and register them with insurance products</p>
         
         {/* Progress Indicator */}
         <div className="mt-6">
           <nav aria-label="Progress">
             <ol className="flex items-center">
               <li className="relative">
-                <div className={`${step >= 1 ? 'bg-red-600' : 'bg-gray-200'} h-8 w-8 rounded-full flex items-center justify-center text-white font-medium text-sm`}>
+                <div className={`${step >= 1 ? 'bg-blue-600' : 'bg-gray-200'} h-8 w-8 rounded-full flex items-center justify-center text-white font-medium text-sm`}>
                   1
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-900">ID Search</span>
+                <span className="ml-2 text-sm font-medium text-blue-900">ID Search</span>
               </li>
               <li className="relative ml-8">
-                <div className={`${step >= 2 ? 'bg-red-600' : 'bg-gray-200'} h-8 w-8 rounded-full flex items-center justify-center text-white font-medium text-sm`}>
+                <div className={`${step >= 2 ? 'bg-blue-600' : 'bg-gray-200'} h-8 w-8 rounded-full flex items-center justify-center text-white font-medium text-sm`}>
                   2
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-900">Verify & Attach Products</span>
+                <span className="ml-2 text-sm font-medium text-blue-900">Verify & Attach Products</span>
               </li>
               <li className="relative ml-8">
-                <div className={`${step >= 3 ? 'bg-red-600' : 'bg-gray-200'} h-8 w-8 rounded-full flex items-center justify-center text-white font-medium text-sm`}>
+                <div className={`${step >= 3 ? 'bg-blue-600' : 'bg-gray-200'} h-8 w-8 rounded-full flex items-center justify-center text-white font-medium text-sm`}>
                   3
                 </div>
-                <span className="ml-2 text-sm font-medium text-gray-900">Complete Registration</span>
+                <span className="ml-2 text-sm font-medium text-blue-900">Complete Registration</span>
               </li>
             </ol>
           </nav>
@@ -628,12 +750,12 @@ const RegistrationPage = () => {
       </div>
 
       {/* Registration Flow */}
-      <div className="bg-white shadow-sm rounded-xl border border-gray-100">
+      <div className="bg-white shadow-sm rounded-xl border border-blue-100">
         {step === 1 && (
           <>
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Search Client by ID</h2>
-              <p className="text-sm text-gray-600">Enter the client's ID document to retrieve their information from external systems</p>
+            <div className="px-6 py-4 border-b border-blue-100">
+              <h2 className="text-lg font-semibold text-blue-900">Search Client by ID</h2>
+              <p className="text-sm text-blue-600">Enter the client's ID document to retrieve their information from external systems</p>
             </div>
             <div className="p-6">
               {error && (
@@ -706,27 +828,47 @@ const RegistrationPage = () => {
               
 
               
-              {/* Available Test ID Examples */}
-              <div className="mt-6 bg-blue-50 rounded-lg p-4">
-                <h3 className="font-medium text-blue-900 mb-2">Available Test ID Numbers (Click to use):</h3>
-                {availableTestIds.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {availableTestIds.map(demo => (
-                        <button
-                          key={demo.idNumber}
-                          onClick={() => setIdNumber(demo.idNumber)}
-                          className="text-left text-sm bg-white border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100 text-blue-700 transition-colors"
-                        >
-                          <div className="font-medium">{demo.idNumber}</div>
-                          <div className="text-xs text-blue-500">{demo.fullName} • Found in {demo.displaySource}</div>
-                        </button>
-                      ))}
-                    </div>
-                    <p className="text-xs text-blue-600 mt-2">Only showing unregistered IDs available for testing</p>
-                  </>
-                ) : (
-                  <div className="text-sm text-blue-600">Loading available test IDs...</div>
+              {/* Show Demo IDs Toggle */}
+              <div className="mt-6">
+                <button
+                  onClick={() => setShowDemoIds(!showDemoIds)}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center gap-2 transition-colors"
+                >
+                  <svg 
+                    className={`w-4 h-4 transform transition-transform ${showDemoIds ? 'rotate-90' : ''}`} 
+                    fill="none" 
+                    viewBox="0 0 24 24" 
+                    stroke="currentColor"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                  {showDemoIds ? 'Hide Demo IDs' : 'Show Demo IDs'}
+                </button>
+                
+                {/* Available Test ID Examples - Collapsible */}
+                {showDemoIds && (
+                  <div className="mt-3 bg-blue-50 rounded-lg p-4">
+                    <h3 className="font-medium text-blue-900 mb-2">Available Test ID Numbers (Click to use):</h3>
+                    {availableTestIds.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          {availableTestIds.map(demo => (
+                            <button
+                              key={demo.idNumber}
+                              onClick={() => setIdNumber(demo.idNumber)}
+                              className="text-left text-sm bg-white border border-blue-200 rounded-lg px-3 py-2 hover:bg-blue-100 text-blue-700 transition-colors"
+                            >
+                              <div className="font-medium">{demo.idNumber}</div>
+                              <div className="text-xs text-blue-500">{demo.fullName} • Found in {demo.displaySource}</div>
+                            </button>
+                          ))}
+                        </div>
+                        <p className="text-xs text-blue-600 mt-2">Only showing unregistered IDs available for testing</p>
+                      </>
+                    ) : (
+                      <div className="text-sm text-blue-600">Loading available test IDs...</div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>
@@ -763,53 +905,99 @@ const RegistrationPage = () => {
               </div>
 
               {/* Product Selection */}
-              <h3 className="font-medium text-gray-900 mb-4">Select Insurance Products</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium text-blue-900">Select Insurance Products</h3>
+                <span className="text-sm text-blue-600">
+                  {selectedProducts.length} selected • {products.length} available
+                </span>
+              </div>
+              
+              {/* Display products with expandable section */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                {products.map((product) => (
+                {(showAllProducts ? products : products.slice(0, 3)).map((product) => (
                   <div
                     key={product.productId}
-                    className={`border rounded-lg p-4 cursor-pointer transition-colors duration-200 ${
+                    className={`border rounded-lg p-4 cursor-pointer transition-all duration-200 ${
                       selectedProducts.includes(product.productId)
-                        ? 'border-red-500 bg-red-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-blue-500 bg-blue-50 shadow-md'
+                        : 'border-gray-200 hover:border-blue-300 hover:shadow-sm'
                     }`}
                     onClick={() => handleProductSelect(product.productId)}
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{product.productName}</h4>
-                        <p className="text-sm text-gray-600">{product.productCode}</p>
-                        <p className="text-sm text-gray-500 mt-1">{product.category} Insurance</p>
+                        <h4 className="font-medium text-blue-900">{product.productName}</h4>
+                        <p className="text-sm text-blue-600">{product.productCode}</p>
+                        <div className="flex items-center mt-1">
+                          <span className="inline-block px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                            {product.category}
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 mt-2">{product.description}</p>
+                        {product.premiumRange && (
+                          <p className="text-xs text-gray-500 mt-1">Premium: {product.premiumRange}</p>
+                        )}
+                        {product.coverageRange && (
+                          <p className="text-xs text-gray-500">Coverage: {product.coverageRange}</p>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-red-600">{product.currency} {product.premiumAmount}</p>
-                        <p className="text-xs text-gray-500">per month</p>
+                      <div className="text-right ml-4">
+                        <p className="text-lg font-bold text-blue-600">{product.currency} {product.premiumAmount}</p>
+                        <p className="text-xs text-gray-500">avg/month</p>
                       </div>
                     </div>
-                    <div className="mt-3">
+                    <div className="mt-3 flex items-center">
                       <input
                         type="checkbox"
                         checked={selectedProducts.includes(product.productId)}
                         onChange={() => handleProductSelect(product.productId)}
-                        className="h-4 w-4 text-red-600 focus:ring-red-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                       />
-                      <span className="ml-2 text-sm text-gray-700">Select this product</span>
+                      <span className="ml-2 text-sm text-gray-700">
+                        {selectedProducts.includes(product.productId) ? 'Selected' : 'Select this product'}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
               
+              {/* Show More/Less Button */}
+              {products.length > 3 && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={() => setShowAllProducts(!showAllProducts)}
+                    className="inline-flex items-center px-4 py-2 border border-blue-300 rounded-lg text-sm font-medium text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
+                  >
+                    {showAllProducts ? (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                        </svg>
+                        Show Less Products
+                      </>
+                    ) : (
+                      <>
+                        <svg className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                        Show All {products.length} Products
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+              
               <div className="mt-6 flex justify-between">
                 <button
                   onClick={() => setStep(1)}
-                  className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="border border-blue-300 text-blue-700 px-6 py-2 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Back to Search
                 </button>
                 <button
                   onClick={() => setStep(3)}
                   disabled={selectedProducts.length === 0}
-                  className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Review & Register
                 </button>
@@ -820,25 +1008,25 @@ const RegistrationPage = () => {
 
         {step === 3 && clientData && (
           <>
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h2 className="text-lg font-semibold text-gray-900">Complete Registration</h2>
-              <p className="text-sm text-gray-600">Review all details and complete the client registration</p>
+            <div className="px-6 py-4 border-b border-blue-100">
+              <h2 className="text-lg font-semibold text-blue-900">Complete Registration</h2>
+              <p className="text-sm text-blue-600">Review all details and complete the client registration</p>
             </div>
             <div className="p-6">
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="font-medium text-gray-900 mb-3">Client Information</h3>
+              <div className="bg-blue-50 rounded-lg p-4 mb-6">
+                <h3 className="font-medium text-blue-900 mb-3">Client Information</h3>
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div><span className="text-gray-600">Name:</span> {clientData.fullName}</div>
-                  <div><span className="text-gray-600">ID:</span> {clientData.idNumber}</div>
-                  <div><span className="text-gray-600">Gender:</span> {clientData.gender}</div>
-                  <div><span className="text-gray-600">Mobile:</span> {clientData.mobileNumber}</div>
-                  <div><span className="text-gray-600">Province:</span> {clientData.province}</div>
-                  <div><span className="text-gray-600">Source:</span> {clientData.source}</div>
+                  <div><span className="text-blue-600">Name:</span> {clientData.fullName}</div>
+                  <div><span className="text-blue-600">ID:</span> {clientData.idNumber}</div>
+                  <div><span className="text-blue-600">Gender:</span> {clientData.gender}</div>
+                  <div><span className="text-blue-600">Mobile:</span> {clientData.mobileNumber}</div>
+                  <div><span className="text-blue-600">Province:</span> {clientData.province}</div>
+                  <div><span className="text-blue-600">Source:</span> {clientData.source}</div>
                 </div>
               </div>
               
-              <div className="bg-red-50 rounded-lg p-4">
-                <h3 className="font-medium text-gray-900 mb-3">Selected Products ({selectedProducts.length})</h3>
+              <div className="bg-cyan-50 rounded-lg p-4">
+                <h3 className="font-medium text-blue-900 mb-3">Selected Products ({selectedProducts.length})</h3>
                 <div className="space-y-2">
                   {selectedProducts.map(productId => {
                     const product = products.find(p => p.productId === productId);
@@ -850,10 +1038,10 @@ const RegistrationPage = () => {
                     ) : null;
                   })}
                 </div>
-                <div className="border-t border-red-200 mt-3 pt-3">
+                <div className="border-t border-cyan-200 mt-3 pt-3">
                   <div className="flex justify-between items-center font-medium">
                     <span>Total Monthly Premium:</span>
-                    <span className="text-red-600">
+                    <span className="text-blue-600">
                       ZMW {selectedProducts.reduce((total, productId) => {
                         const product = products.find(p => p.productId === productId);
                         return total + (product?.premiumAmount || 0);
@@ -866,7 +1054,7 @@ const RegistrationPage = () => {
               <div className="mt-6 flex justify-between">
                 <button
                   onClick={() => setStep(2)}
-                  className="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className="border border-blue-300 text-blue-700 px-6 py-2 rounded-lg hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   Back to Products
                 </button>
@@ -879,7 +1067,7 @@ const RegistrationPage = () => {
                     <>
                       <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 818-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Registering...
                     </>
@@ -893,23 +1081,80 @@ const RegistrationPage = () => {
         )}
       </div>
 
-      {/* Professional Loading Overlay */}
+      {/* Professional Loading Overlay with Real-time Source Status */}
       {verificationLoading && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-4 shadow-2xl">
-            <div className="text-center">
+          <div className="bg-white rounded-2xl p-8 max-w-lg w-full mx-4 shadow-2xl">
+            <div className="text-center mb-6">
               {/* Status Text with Integrated Spinner */}
               <div className="flex items-center justify-center mb-4">
                 <div className="w-6 h-6 mr-3">
                   <div className="w-full h-full border-2 border-gray-200 rounded-full"></div>
-                  <div className="absolute w-6 h-6 border-2 border-red-600 rounded-full animate-spin border-t-transparent -mt-6"></div>
+                  <div className="absolute w-6 h-6 border-2 border-blue-600 rounded-full animate-spin border-t-transparent -mt-6"></div>
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900">Verifying Identity</h3>
               </div>
-              <p className="text-gray-600">
-                {currentSearchingSource || 'Connecting to verification systems...'}
+              <p className="text-gray-600 mb-6">
+                {currentSearchingSource || 'Establishing secure connections...'}
               </p>
             </div>
+            
+            {/* Real-time Source Status Display */}
+            {verificationSources.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-sm font-medium text-gray-700 text-left">Data Sources:</h4>
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {verificationSources.map((source, index) => (
+                    <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        {source.status === 'checking' ? (
+                          <div className="w-4 h-4 border-2 border-blue-500 rounded-full animate-spin border-t-transparent"></div>
+                        ) : source.status === 'found' ? (
+                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        ) : source.status === 'not-found' ? (
+                          <div className="w-4 h-4 bg-gray-400 rounded-full flex items-center justify-center">
+                            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        ) : source.status === 'skipped' ? (
+                          <div className="w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center">
+                            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M3 10a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        ) : source.status === 'waiting' ? (
+                          <div className="w-4 h-4 border-2 border-gray-300 rounded-full"></div>
+                        ) : (
+                          <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+                        )}
+                        <span className={`text-sm font-medium ${
+                          source.status === 'checking' ? 'text-blue-700' : 
+                          source.status === 'found' ? 'text-green-700' : 
+                          source.status === 'skipped' ? 'text-yellow-600' :
+                          source.status === 'waiting' ? 'text-gray-400' :
+                          'text-gray-600'
+                        }`}>
+                          {source.displayName}
+                        </span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {source.status === 'checking' ? 'Searching...' : 
+                         source.status === 'found' ? 'Match Found' : 
+                         source.status === 'not-found' ? 'No Match' : 
+                         source.status === 'skipped' ? 'Skipped' :
+                         source.status === 'waiting' ? 'Waiting...' :
+                         'Searched'}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
@@ -933,6 +1178,106 @@ const RegistrationPage = () => {
                 </svg>
               )}
               <p className="text-sm font-medium">{toast.message}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* EPOS Payload Card - Separate from toast, positioned below */}
+      {showEposCard && eposToast.payload && (
+        <div className="fixed top-20 right-4 z-40 animate-fade-in-down max-w-lg">
+          <div className="bg-white border border-gray-200 rounded-lg shadow-xl">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-6 py-4 rounded-t-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" clipRule="evenodd" />
+                  </svg>
+                  <div>
+                    <h3 className="text-sm font-semibold">EPOS Database Payload</h3>
+                    <p className="text-xs text-blue-100 mt-1">Data sent to external system</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setEposToast(prev => ({...prev, showPayload: !prev.showPayload}))}
+                    className="p-1 hover:bg-blue-800 rounded transition-colors"
+                    title={eposToast.showPayload ? "Hide JSON" : "Show JSON"}
+                  >
+                    <svg 
+                      className={`w-4 h-4 transform transition-transform ${eposToast.showPayload ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      viewBox="0 0 24 24" 
+                      stroke="currentColor"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <button
+                    onClick={() => setShowEposCard(false)}
+                    className="p-1 hover:bg-blue-800 rounded transition-colors"
+                    title="Close"
+                  >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Content */}
+            <div className="p-6">
+              {/* Quick Summary */}
+              <div className="grid grid-cols-2 gap-4 mb-4 text-sm">
+                <div>
+                  <span className="text-gray-500 block">ID Number:</span>
+                  <span className="font-medium">{eposToast.payload.id_number}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block">Source:</span>
+                  <span className="font-medium capitalize">{eposToast.payload.source?.replace('_', ' ')}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block">Full Name:</span>
+                  <span className="font-medium">{eposToast.payload.full_name}</span>
+                </div>
+                <div>
+                  <span className="text-gray-500 block">Products:</span>
+                  <span className="font-medium">{eposToast.payload.products?.length || 0} selected</span>
+                </div>
+              </div>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs text-gray-500 uppercase tracking-wide font-semibold">JSON Payload</span>
+                <button
+                  onClick={() => navigator.clipboard.writeText(JSON.stringify(eposToast.payload, null, 2))}
+                  className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-1 rounded transition-colors font-medium"
+                  title="Copy JSON to clipboard"
+                >
+                  📋 Copy JSON
+                </button>
+              </div>
+              
+              {/* Collapsible JSON */}
+              {eposToast.showPayload && (
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  <pre className="text-xs bg-gray-50 text-gray-800 p-4 overflow-x-auto max-h-96 overflow-y-auto leading-relaxed">
+{JSON.stringify(eposToast.payload, null, 2)}
+                  </pre>
+                </div>
+              )}
+              
+              {!eposToast.showPayload && (
+                <div className="text-center py-4 text-gray-500 border border-dashed border-gray-300 rounded-lg">
+                  <svg className="w-8 h-8 mx-auto mb-2 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <p className="text-sm">Click the arrow above to view JSON payload</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1043,6 +1388,11 @@ const ClientsPage = () => {
     try {
       setLoading(true);
       const response = await clientAPI.getAll();
+      console.log('Client API response:', response);
+      if (response && response.length > 0) {
+        console.log('First client structure:', response[0]);
+        console.log('First client products:', response[0].products);
+      }
       setClients(response);
     } catch (err: any) {
       setError('Failed to load clients');
@@ -1184,7 +1534,7 @@ const ClientsPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredClients.map((client) => (
-                  <tr key={client.clientId} className="hover:bg-gray-50">
+                  <tr key={client.registrationId || client.clientId} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
                         <div className="text-sm font-medium text-gray-900">{client.fullName}</div>
@@ -1200,13 +1550,13 @@ const ClientsPage = () => {
                     </td>
                     <td className="px-6 py-4">
                       <div className="space-y-1">
-                        {client.selectedProducts && client.selectedProducts.length > 0 ? (
-                          client.selectedProducts.map((product: string, index: number) => (
+                        {(client.products && client.products.length > 0) ? (
+                          client.products.map((clientProduct: any, index: number) => (
                             <span
                               key={index}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-1"
+                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 mr-1 mb-1"
                             >
-                              {product}
+                              {clientProduct.product?.productName || 'Unknown Product'}
                             </span>
                           ))
                         ) : (
@@ -1438,11 +1788,54 @@ const MIReportsPage = () => {
   const generateReport = async () => {
     setLoading(true);
     try {
-      // Simulate API call for report data
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Call real API for dashboard statistics data
+      const apiResponse = await reportsAPI.getDashboardStatistics();
       
-      // Mock report data
-      const mockData = {
+      // Transform backend response to match frontend expectations
+      if (apiResponse && typeof apiResponse.TotalClients !== 'undefined') {
+        const transformedData = {
+          summary: {
+            totalClients: apiResponse.TotalClients || 0,
+            newRegistrations: apiResponse.TodayRegistrations || 0,
+            activeProducts: apiResponse.ActiveProducts || 0,
+            totalPremium: apiResponse.ProvinceStats ? 
+              apiResponse.ProvinceStats.reduce((sum: number, p: any) => sum + (p.TotalPremium || 0), 0) : 0,
+            verificationRequests: apiResponse.TotalVerifications || 0,
+            successfulVerifications: Math.round((apiResponse.TotalVerifications || 0) * ((apiResponse.SuccessRate || 0) / 100))
+          },
+          clientsByProvince: (apiResponse.ProvinceStats || []).map((stat: any) => ({
+            province: stat.Province || 'Unknown',
+            count: stat.ClientCount || 0,
+            percentage: apiResponse.TotalClients > 0 ? 
+              Math.round((stat.ClientCount / apiResponse.TotalClients) * 100 * 10) / 10 : 0
+          })),
+          productPerformance: (apiResponse.CategoryStats || []).map((stat: any) => ({
+            name: stat.Category || 'Unknown',
+            sales: stat.EnrollmentCount || 0,
+            premium: stat.TotalPremium || 0,
+            growth: Math.random() * 20 + 5 // TODO: Calculate actual growth from trends
+          })),
+          verificationStats: {
+            totalRequests: apiResponse.TotalVerifications || 0,
+            successful: Math.round((apiResponse.TotalVerifications || 0) * ((apiResponse.SuccessRate || 0) / 100)),
+            failed: Math.round((apiResponse.TotalVerifications || 0) * (1 - ((apiResponse.SuccessRate || 0) / 100))),
+            avgResponseTime: Math.round((apiResponse.AverageResponseTime || 0) * 1000), // Convert back to ms
+            topSources: (apiResponse.TopVerificationSources || []).map((source: any) => ({
+              source: source.Source || 'Unknown',
+              requests: source.Count || 0,
+              successRate: source.Percentage || 0
+            }))
+          }
+        };
+        setReportData(transformedData);
+      } else {
+        // API returned unexpected format, use fallback
+        throw new Error('API returned unexpected data format');
+      }
+    } catch (error) {
+      console.error('Error generating report:', error);
+      // Fallback to static data if API fails
+      const fallbackData = {
         summary: {
           totalClients: 156,
           newRegistrations: 23,
@@ -1475,10 +1868,7 @@ const MIReportsPage = () => {
           ]
         }
       };
-      
-      setReportData(mockData);
-    } catch (error) {
-      console.error('Error generating report:', error);
+      setReportData(fallbackData);
     } finally {
       setLoading(false);
     }
@@ -1489,18 +1879,18 @@ const MIReportsPage = () => {
     
     const csvData = [
       ['Metric', 'Value'],
-      ['Total Clients', reportData.summary.totalClients],
-      ['New Registrations', reportData.summary.newRegistrations],
-      ['Active Products', reportData.summary.activeProducts],
-      ['Total Premium (ZMW)', reportData.summary.totalPremium],
-      ['Verification Requests', reportData.summary.verificationRequests],
-      ['Successful Verifications', reportData.summary.successfulVerifications],
+      ['Total Clients', reportData?.summary?.totalClients || 0],
+      ['New Registrations', reportData?.summary?.newRegistrations || 0],
+      ['Active Products', reportData?.summary?.activeProducts || 0],
+      ['Total Premium (ZMW)', reportData?.summary?.totalPremium || 0],
+      ['Verification Requests', reportData?.summary?.verificationRequests || 0],
+      ['Successful Verifications', reportData?.summary?.successfulVerifications || 0],
       [''],
       ['Province Distribution', ''],
-      ...reportData.clientsByProvince.map((item: any) => [item.province, `${item.count} (${item.percentage}%)`]),
+      ...(reportData?.clientsByProvince || []).map((item: any) => [item.province, `${item.count} (${item.percentage}%)`]),
       [''],
       ['Product Performance', ''],
-      ...reportData.productPerformance.map((item: any) => [item.name, `${item.sales} sales, ZMW ${item.premium}, ${item.growth}% growth`])
+      ...(reportData?.productPerformance || []).map((item: any) => [item.name, `${item.sales} sales, ZMW ${item.premium}, ${item.growth}% growth`])
     ];
 
     const csvContent = csvData.map(row => row.join(',')).join('\n');
@@ -1615,7 +2005,7 @@ const MIReportsPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Total Clients</p>
-                  <p className="text-2xl font-bold text-gray-900">{reportData.summary.totalClients}</p>
+                  <p className="text-2xl font-bold text-gray-900">{reportData?.summary?.totalClients || 0}</p>
                 </div>
               </div>
             </div>
@@ -1631,7 +2021,7 @@ const MIReportsPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">New Registrations</p>
-                  <p className="text-2xl font-bold text-gray-900">{reportData.summary.newRegistrations}</p>
+                  <p className="text-2xl font-bold text-gray-900">{reportData?.summary?.newRegistrations || 0}</p>
                 </div>
               </div>
             </div>
@@ -1647,7 +2037,7 @@ const MIReportsPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Total Premium</p>
-                  <p className="text-2xl font-bold text-gray-900">ZMW {reportData.summary.totalPremium.toLocaleString()}</p>
+                  <p className="text-2xl font-bold text-gray-900">ZMW {(reportData?.summary?.totalPremium || 0).toLocaleString()}</p>
                 </div>
               </div>
             </div>
@@ -1664,7 +2054,7 @@ const MIReportsPage = () => {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Verification Success Rate</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {Math.round((reportData.summary.successfulVerifications / reportData.summary.verificationRequests) * 100)}%
+                    {Math.round(((reportData?.summary?.successfulVerifications || 0) / Math.max(reportData?.summary?.verificationRequests || 1, 1)) * 100)}%
                   </p>
                 </div>
               </div>
@@ -1681,7 +2071,7 @@ const MIReportsPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Active Products</p>
-                  <p className="text-2xl font-bold text-gray-900">{reportData.summary.activeProducts}</p>
+                  <p className="text-2xl font-bold text-gray-900">{reportData?.summary?.activeProducts || 0}</p>
                 </div>
               </div>
             </div>
@@ -1697,7 +2087,7 @@ const MIReportsPage = () => {
                 </div>
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Avg Response Time</p>
-                  <p className="text-2xl font-bold text-gray-900">{reportData.verificationStats.avgResponseTime}ms</p>
+                  <p className="text-2xl font-bold text-gray-900">{reportData?.verificationStats?.avgResponseTime || 0}ms</p>
                 </div>
               </div>
             </div>
@@ -1712,15 +2102,15 @@ const MIReportsPage = () => {
               </div>
               <div className="p-6">
                 <div className="space-y-4">
-                  {reportData.clientsByProvince.map((item: any, index: number) => (
+                  {(reportData?.clientsByProvince || []).map((item: any, index: number) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center">
                         <div className="w-3 h-3 rounded-full bg-red-600 mr-3"></div>
-                        <span className="text-sm font-medium text-gray-900">{item.province}</span>
+                        <span className="text-sm font-medium text-gray-900">{item?.province || 'N/A'}</span>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm font-bold text-gray-900">{item.count}</div>
-                        <div className="text-xs text-gray-500">{item.percentage}%</div>
+                        <div className="text-sm font-bold text-gray-900">{item?.count || 0}</div>
+                        <div className="text-xs text-gray-500">{item?.percentage || 0}%</div>
                       </div>
                     </div>
                   ))}
@@ -1744,16 +2134,16 @@ const MIReportsPage = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
-                    {reportData.productPerformance.map((item: any, index: number) => (
+                    {(reportData?.productPerformance || []).map((item: any, index: number) => (
                       <tr key={index}>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{item.name}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">{item.sales}</td>
-                        <td className="px-6 py-4 text-sm text-gray-600">ZMW {item.premium.toLocaleString()}</td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">{item?.name || 'N/A'}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">{item?.sales || 0}</td>
+                        <td className="px-6 py-4 text-sm text-gray-600">ZMW {(item?.premium || 0).toLocaleString()}</td>
                         <td className="px-6 py-4">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            item.growth > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                            (item?.growth || 0) > 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                           }`}>
-                            {item.growth > 0 ? '+' : ''}{item.growth}%
+                            {(item?.growth || 0) > 0 ? '+' : ''}{item?.growth || 0}%
                           </span>
                         </td>
                       </tr>

@@ -43,23 +43,57 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="bg-white shadow-sm border-b border-blue-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4">
-            <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 bg-red-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">P</span>
+            <div className="flex items-center space-x-4">
+              {/* Prudential Logo - Bigger */}
+              <div className="h-10 w-auto rounded-lg overflow-hidden ">
+                <img 
+                  src="/img/logo-prudential.png" 
+                  alt="Prudential Logo"
+                  className="h-full w-auto object-contain"
+                  onError={(e) => {
+                    // Fallback to CSS logo if image fails to load
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.classList.remove('hidden');
+                  }}
+                />
+                {/* Fallback CSS logo */}
+                <div className="hidden h-16 w-16 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-xl">P</span>
+                </div>
               </div>
               <div>
-                <h1 className="text-xl font-bold text-gray-900">Prudential</h1>
-                <p className="text-xs text-gray-500">Identity Verification System</p>
+                <p className="text-sm text-blue-600 font-medium">Identity Verification System</p>
               </div>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Powered by</p>
-              <p className="text-sm font-semibold text-red-600">Ekwantu Consulting</p>
+            <div className="flex items-center space-x-3">
+              <div className="text-right">
+                <p className="text-sm text-gray-600">Powered by</p>
+              </div>
+              <div className="h-12 w-auto rounded-full overflow-hidden">
+                <img 
+                  src="/img/ekwatu.png" 
+                  alt="Ekwantu Logo"
+                  className="w-full h-full object-contain"
+                  onError={(e) => {
+                    // Fallback to CSS logo if image fails to load
+                    const target = e.currentTarget as HTMLImageElement;
+                    target.style.display = 'none';
+                    const fallback = target.nextElementSibling as HTMLElement;
+                    if (fallback) fallback.classList.remove('hidden');
+                  }}
+                />
+                {/* Fallback CSS logo */}
+                <div className="hidden w-full h-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">E</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -69,18 +103,33 @@ export const LoginPage: React.FC = () => {
       <div className="flex items-center justify-center px-4 sm:px-6 lg:px-8 pt-20">
         <div className="max-w-md w-full">
           {/* Login Card */}
-          <div className="bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="bg-gradient-to-r from-red-600 to-red-700 px-6 py-8">
+          <div className="bg-white rounded-xl shadow-xl border border-blue-100 overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-8">
               <div className="text-center">
-                <div className="mx-auto h-16 w-16 bg-white rounded-full flex items-center justify-center mb-4">
-                  <svg className="h-8 w-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-4.618 1.04A11.955 11.955 0 012.944 12H2.944a11.955 11.955 0 004.618 9.056A11.955 11.955 0 0112 21.056a11.955 11.955 0 014.618-9.056A11.955 11.955 0 0121.056 12A11.955 11.955 0 0121.056 12a11.955 11.955 0 01-4.618-9.056z" />
-                  </svg>
+                <div className="mx-auto h-16 w-16 bg-white rounded-full flex items-center justify-center mb-4 overflow-hidden">
+                  <img 
+                    src="/img/prudentil-head.png" 
+                    alt="Prudential Head Logo"
+                    className="h-12 w-12 object-contain"
+                    onError={(e) => {
+                      // Fallback to CSS logo if image fails to load
+                      const target = e.currentTarget as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = target.nextElementSibling as HTMLElement;
+                      if (fallback) fallback.classList.remove('hidden');
+                    }}
+                  />
+                  {/* Fallback CSS logo */}
+                  <div className="hidden h-12 w-12 bg-gray-100 rounded-full flex items-center justify-center">
+                    <div className="h-8 w-8 bg-gray-600 rounded-full flex items-center justify-center">
+                      <div className="h-6 w-6 bg-blue-500 rounded-sm"></div>
+                    </div>
+                  </div>
                 </div>
                 <h2 className="text-2xl font-bold text-white mb-2">
-                  IDV Portal
+                  Identity Verification Portal
                 </h2>
-                <p className="text-red-100 text-sm">
+                <p className="text-blue-100 text-sm">
                   Secure Identity Verification System
                 </p>
               </div>
@@ -113,7 +162,7 @@ export const LoginPage: React.FC = () => {
                       name="username"
                       type="text"
                       required
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       placeholder="Enter your username"
                       value={formData.username}
                       onChange={handleChange}
@@ -130,7 +179,7 @@ export const LoginPage: React.FC = () => {
                       name="password"
                       type="password"
                       required
-                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-red-500 sm:text-sm"
+                      className="block w-full px-3 py-3 border border-gray-300 rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                       placeholder="Enter your password"
                       value={formData.password}
                       onChange={handleChange}
@@ -142,7 +191,7 @@ export const LoginPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={loading.isLoading}
-                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                  className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                 >
                   {loading.isLoading ? (
                     <>
@@ -172,7 +221,7 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setFormData({ username: 'admin', password: 'Admin@123' })}
-                    className="flex justify-between items-center bg-white hover:bg-gray-50 rounded px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer text-xs"
+                    className="flex justify-between items-center bg-white hover:bg-gray-50 rounded px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer text-xs"
                   >
                     <span className="font-medium text-gray-600">Admin:</span>
                     <span className="font-mono text-gray-800">admin / Admin@123</span>
@@ -180,7 +229,7 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setFormData({ username: 'agent', password: 'Agent@123' })}
-                    className="flex justify-between items-center bg-white hover:bg-gray-50 rounded px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer text-xs"
+                    className="flex justify-between items-center bg-white hover:bg-gray-50 rounded px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer text-xs"
                   >
                     <span className="font-medium text-gray-600">Agent:</span>
                     <span className="font-mono text-gray-800">agent / Agent@123</span>
@@ -188,7 +237,7 @@ export const LoginPage: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setFormData({ username: 'viewer', password: 'Viewer@123' })}
-                    className="flex justify-between items-center bg-white hover:bg-gray-50 rounded px-3 py-2 border border-gray-200 hover:border-red-300 transition-colors cursor-pointer text-xs"
+                    className="flex justify-between items-center bg-white hover:bg-gray-50 rounded px-3 py-2 border border-gray-200 hover:border-blue-300 transition-colors cursor-pointer text-xs"
                   >
                     <span className="font-medium text-gray-600">Viewer:</span>
                     <span className="font-mono text-gray-800">viewer / Viewer@123</span>

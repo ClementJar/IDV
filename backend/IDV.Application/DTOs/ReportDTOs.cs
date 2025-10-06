@@ -41,12 +41,24 @@ public class ExportResponseDto
 public class DashboardStatisticsDto
 {
     public int TotalClients { get; set; }
-    public int ActivePolicies { get; set; }
-    public decimal TotalRevenue { get; set; }
-    public int NewRegistrationsThisMonth { get; set; }
+    public int TodayRegistrations { get; set; }
+    public int TotalVerifications { get; set; }
+    public int TodayVerifications { get; set; }
+    public int TotalProducts { get; set; }
+    public int ActiveProducts { get; set; }
+    public decimal AverageResponseTime { get; set; }
+    public decimal SuccessRate { get; set; }
+    public List<VerificationSourceStatDto> TopVerificationSources { get; set; } = new();
     public List<ProvinceStatDto> ProvinceStats { get; set; } = new();
     public List<ProductCategoryStatDto> CategoryStats { get; set; } = new();
     public List<RegistrationTrendDto> RegistrationTrends { get; set; } = new();
+}
+
+public class VerificationSourceStatDto
+{
+    public string Source { get; set; } = string.Empty;
+    public int Count { get; set; }
+    public decimal Percentage { get; set; }
 }
 
 public class ProvinceStatDto

@@ -71,4 +71,9 @@ public class Repository<T> : IRepository<T> where T : class
     {
         return await _dbSet.AnyAsync(predicate);
     }
+
+    public virtual IQueryable<T> GetQueryable()
+    {
+        return _dbSet;
+    }
 }

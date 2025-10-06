@@ -54,8 +54,8 @@ export const VerificationPage: React.FC = () => {
       <div className="mb-8">
         <div className="md:flex md:items-center md:justify-between">
           <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-bold text-gray-900">ID Verification</h1>
-            <p className="mt-2 text-gray-600">
+            <h1 className="text-3xl font-bold text-blue-900">ID Verification</h1>
+            <p className="mt-2 text-blue-700">
               Verify client identity using National ID or other identification documents from external sources.
             </p>
           </div>
@@ -69,8 +69,8 @@ export const VerificationPage: React.FC = () => {
       </div>
 
       {/* Verification Form */}
-      <div className="bg-white shadow-sm rounded-xl border border-gray-100 mb-8">
-        <div className="px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-blue-100">
+      <div className="bg-white shadow-sm rounded-xl border border-blue-100 mb-8">
+        <div className="px-6 py-4 border-b border-blue-100 bg-gradient-to-r from-blue-50 to-blue-100">
           <div className="flex items-center space-x-3">
             <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
               <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -78,8 +78,8 @@ export const VerificationPage: React.FC = () => {
               </svg>
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900">Client ID Verification</h2>
-              <p className="text-sm text-gray-600">Enter client identification details below</p>
+              <h2 className="text-lg font-semibold text-blue-900">Client ID Verification</h2>
+              <p className="text-sm text-blue-600">Enter client identification details below</p>
             </div>
           </div>
         </div>
@@ -87,14 +87,14 @@ export const VerificationPage: React.FC = () => {
           <form onSubmit={handleVerification} className="space-y-6">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
               <div>
-                <label htmlFor="idType" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="idType" className="block text-sm font-medium text-blue-700">
                   ID Type
                 </label>
                 <select
                   id="idType"
                   value={idType}
                   onChange={(e) => setIdType(e.target.value)}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="mt-1 block w-full border-blue-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   disabled={loading.isLoading}
                 >
                   <option value="NationalID">National ID</option>
@@ -103,17 +103,22 @@ export const VerificationPage: React.FC = () => {
                 </select>
               </div>
               <div>
-                <label htmlFor="idNumber" className="block text-sm font-medium text-gray-700">
+                <label htmlFor="idNumber" className="block text-sm font-medium text-blue-700">
                   ID Number
                 </label>
                 <input
                   type="text"
                   id="idNumber"
+                  name="idNumber"
                   value={idNumber}
                   onChange={(e) => setIdNumber(e.target.value)}
-                  className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="mt-1 block w-full border-blue-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   placeholder="Enter ID number"
                   disabled={loading.isLoading}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck="false"
                   required
                 />
               </div>
@@ -148,7 +153,7 @@ export const VerificationPage: React.FC = () => {
                 type="button"
                 onClick={handleSearch}
                 disabled={loading.isLoading || !idNumber.trim()}
-                className="inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex justify-center py-2 px-4 border border-blue-300 shadow-sm text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading.isLoading && loading.message?.includes('Searching') ? (
                   <>
@@ -164,7 +169,7 @@ export const VerificationPage: React.FC = () => {
               </button>
             </div>
 
-            <div className="text-sm text-gray-500">
+            <div className="text-sm text-blue-600">
               <p className="font-medium">Demo ID Numbers:</p>
               <div className="mt-1 space-y-1">
                 <p>• <span className="font-mono">150585/10/1</span> - John Banda (Verified)</p>
@@ -177,9 +182,9 @@ export const VerificationPage: React.FC = () => {
 
       {/* Verification Results */}
       {verificationResult && (
-        <div className="mt-8 bg-white shadow rounded-lg">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-lg font-medium text-gray-900">Verification Results</h2>
+        <div className="mt-8 bg-white shadow rounded-lg border border-blue-100">
+          <div className="px-6 py-4 border-b border-blue-200">
+            <h2 className="text-lg font-medium text-blue-900">Verification Results</h2>
           </div>
           <div className="p-6">
             <div className={`rounded-md p-4 mb-6 ${verificationResult.isVerified ? 'bg-green-50' : 'bg-red-50'}`}>
