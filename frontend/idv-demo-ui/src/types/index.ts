@@ -141,6 +141,10 @@ export interface DashboardStats {
   totalProducts: number;
   successRate: number;
   avgResponseTime: number;
+  // number of successful verification attempts (ResultStatus == 'Found')
+  successfulVerifications?: number;
+  // number of failed verification attempts (ResultStatus != 'Found')
+  failedVerifications?: number;
   recentActivity: ActivityLog[];
 }
 

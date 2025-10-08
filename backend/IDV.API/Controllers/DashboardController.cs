@@ -32,10 +32,11 @@ namespace IDV.API.Controllers
                 var todayRegistrations = await _context.RegisteredClients
                     .CountAsync(c => c.RegistrationDate.Date == today);
 
-                // Calculate success rate from verification attempts
+                // Calculate success/failed counts and success rate from verification attempts
                 var totalAttempts = await _context.VerificationAttempts.CountAsync();
                 var successfulAttempts = await _context.VerificationAttempts
                     .CountAsync(v => v.ResultStatus == "Found");
+                var failedAttempts = totalAttempts - successfulAttempts;
                 var successRate = totalAttempts > 0 ? (double)successfulAttempts / totalAttempts * 100 : 0;
 
                 // Calculate average response time
@@ -63,6 +64,8 @@ namespace IDV.API.Controllers
                     TotalClients = totalClients,
                     TotalVerifications = totalVerifications,
                     TotalProducts = totalProducts,
+                    SuccessfulVerifications = successfulAttempts,
+                    FailedVerifications = failedAttempts,
                     RecentActivity = recentActivity,
                     TodayRegistrations = todayRegistrations,
                     SuccessRate = Math.Round(successRate, 1),

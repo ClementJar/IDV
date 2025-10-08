@@ -27,7 +27,9 @@ const DashboardPage = () => {
     successRate: 0,
     activeProducts: 0,
     avgResponseTime: 0,
-    totalVerifications: 0
+    totalVerifications: 0,
+    successfulVerifications: 0,
+    failedVerifications: 0
   });
   const [recentActivity, setRecentActivity] = useState<any[]>([]);
 
@@ -86,12 +88,14 @@ const DashboardPage = () => {
         const response = await dashboardAPI.getStats();
         console.log('Dashboard API response:', response);
         setStats({
-          totalClients: response.totalClients || 0,
-          todayRegistrations: response.todayRegistrations || 0,
-          successRate: response.successRate || 0,
-          activeProducts: response.totalProducts || 0,
-          avgResponseTime: response.avgResponseTime || 0,
-          totalVerifications: response.totalVerifications || 0
+          totalClients: response.totalClients ?? 0,
+          todayRegistrations: response.todayRegistrations ?? 0,
+          successRate: response.successRate ?? 0,
+          activeProducts: response.totalProducts ?? 0,
+          avgResponseTime: response.avgResponseTime ?? 0,
+          totalVerifications: response.totalVerifications ?? 0,
+          successfulVerifications: response.successfulVerifications ?? 0,
+          failedVerifications: response.failedVerifications ?? 0
         });
         console.log('Recent activity data:', response.recentActivity);
         setRecentActivity(response.recentActivity || []);
@@ -105,7 +109,9 @@ const DashboardPage = () => {
           successRate: 0, // No data available without API
           activeProducts: 16, // Static product count (known from seeder)
           avgResponseTime: 0, // No data available without API
-          totalVerifications: 0 // No data available without API
+          totalVerifications: 0, // No data available without API
+          successfulVerifications: 0,
+          failedVerifications: 0
         });
         // Set realistic fallback activity - no fake activities if no real ones exist
         setRecentActivity([]);
@@ -185,7 +191,10 @@ const DashboardPage = () => {
                 <dl>
                   <dt className="text-sm font-medium text-blue-600 truncate">Total Verifications</dt>
                   <dd className="text-2xl font-bold text-blue-900">{stats.totalVerifications}</dd>
+                  <dd className="text-xs text-red-500">Failed: {stats.failedVerifications || 0}</dd>
+                  <dd className="text-xs text-green-500">Successful: {stats.successfulVerifications || 0}</dd>
                   <dd className="text-xs text-cyan-500">Success Rate: {(stats.successRate || 0).toFixed(1)}%</dd>
+                  
                 </dl>
               </div>
             </div>

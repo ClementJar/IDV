@@ -6,6 +6,10 @@ namespace IDV.Application.DTOs
         public int TotalVerifications { get; set; }
         public int TotalProducts { get; set; }
         public int TodayRegistrations { get; set; }
+        // number of verification attempts that returned a positive match
+        public int SuccessfulVerifications { get; set; }
+        // number of verification attempts that returned no match
+        public int FailedVerifications { get; set; }
         public double SuccessRate { get; set; }
         public double AvgResponseTime { get; set; }
         public List<ActivityLogDto> RecentActivity { get; set; } = new();

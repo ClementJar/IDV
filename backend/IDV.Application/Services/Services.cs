@@ -216,9 +216,6 @@ public class IDVerificationService : IIDVerificationService
                     sourceResult.Result = _mapper.Map<ClientSearchResultDto>(clientResult);
                     foundResult = sourceResult.Result;
                     
-                    // Log successful verification
-                    await LogVerificationAttemptAsync(userId, idNumber, "Found", 1, responseTime, source);
-                    
                     // REAL-TIME: Found in this source, stop searching immediately
                     break;
                 }
@@ -226,9 +223,6 @@ public class IDVerificationService : IIDVerificationService
                 {
                     sourceResult.Status = "NotFound";
                     sourceResult.IsFound = false;
-                    
-                    // Log unsuccessful attempt
-                    await LogVerificationAttemptAsync(userId, idNumber, "NotFound", 0, responseTime, source);
                 }
             }
             catch (Exception ex)
@@ -238,8 +232,9 @@ public class IDVerificationService : IIDVerificationService
                 sourceResult.ResponseTime = (int)(DateTime.UtcNow - sourceStart).TotalMilliseconds;
                 totalResponseTime += sourceResult.ResponseTime;
                 
-                // Log error attempt
-                await LogVerificationAttemptAsync(userId, idNumber, "Error", 0, sourceResult.ResponseTime, source);
+                // Errors are noted per-source in the response; do not persist per-source attempts here
+                // We'll persist a single aggregated VerificationAttempt after the full multi-source search completes
+                // (avoids creating one DB row per source)
             }
         }
 
@@ -253,12 +248,17 @@ public class IDVerificationService : IIDVerificationService
             }
         }
 
-        response.Success = foundResult != null;
-        response.FinalResult = foundResult;
-        response.TotalResponseTime = totalResponseTime;
-        response.OverallStatus = foundResult != null ? "Found" : "NotFound";
+    response.Success = foundResult != null;
+    response.FinalResult = foundResult;
+    response.TotalResponseTime = totalResponseTime;
+    response.OverallStatus = foundResult != null ? "Found" : "NotFound";
 
-        return response;
+    // Persist a single aggregated verification attempt representing the overall multi-source search
+    var overallStatus = response.OverallStatus == "Found" ? "Found" : "NotFound";
+    var overallCount = response.FinalResult != null ? 1 : 0;
+    await LogVerificationAttemptAsync(userId, idNumber, overallStatus, overallCount, totalResponseTime, "MultiSource");
+
+    return response;
     }
 
     public async Task LogVerificationAttemptAsync(Guid userId, string idNumber, string resultStatus, int resultCount, int responseTime, string sourceSystem)
